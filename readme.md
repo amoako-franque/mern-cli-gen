@@ -23,6 +23,11 @@ MERN-CLI-Gen takes the pain out of starting a new full-stack project. It generat
 
 ---
 
+## Prerequisites
+
+- **Node.js**: v18.0.0 or higher
+- **npm**: v9.0.0 or higher
+
 ## Installation
 
 ```bash
