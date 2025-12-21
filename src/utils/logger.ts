@@ -76,7 +76,7 @@ export const logger = {
     banner: (): void => {
         console.log();
         console.log(chalk.bold.magenta('  ╔═══════════════════════════════════════╗'));
-        console.log(chalk.bold.magenta('  ║') + chalk.bold.white('          MERN CLI Generator          ') + chalk.bold.magenta('║'));
+        console.log(chalk.bold.magenta('  ║') + chalk.bold.white('          MERN CLI Generator         ') + chalk.bold.magenta('║'));
         console.log(chalk.bold.magenta('  ╚═══════════════════════════════════════╝'));
         console.log();
     },
