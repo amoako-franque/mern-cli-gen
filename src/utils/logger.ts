@@ -74,10 +74,17 @@ export const logger = {
      * Print the CLI banner
      */
     banner: (): void => {
+        const title = 'MERN CLI Generator';
+        const width = 39; // Width of the internal part (number of ═)
+        const leftPadding = Math.floor((width - title.length) / 2);
+        const rightPadding = width - title.length - leftPadding;
+
+        const line = ' '.repeat(leftPadding) + title + ' '.repeat(rightPadding);
+
         console.log();
-        console.log(chalk.bold.magenta('  ╔═══════════════════════════════════════╗'));
-        console.log(chalk.bold.magenta('  ║') + chalk.bold.white('          MERN CLI Generator         ') + chalk.bold.magenta('║'));
-        console.log(chalk.bold.magenta('  ╚═══════════════════════════════════════╝'));
+        console.log(chalk.bold.magenta(`  ╔${'═'.repeat(width)}╗`));
+        console.log(chalk.bold.magenta('  ║') + chalk.bold.white(line) + chalk.bold.magenta('║'));
+        console.log(chalk.bold.magenta(`  ╚${'═'.repeat(width)}╝`));
         console.log();
     },
 
