@@ -1,10 +1,10 @@
+import { ProjectConfig } from '../../src/types/index';
 import {
     createTemplateContext,
-    getVariantPath,
+    getBackendTemplatePath,
     getFrontendTemplatePath,
-    getBackendTemplatePath
+    getVariantPath
 } from '../../src/utils/templateUtils';
-import { ProjectConfig } from '../../src/types/index';
 
 describe('Template Utils', () => {
     const baseConfig: ProjectConfig = {
@@ -19,7 +19,9 @@ describe('Template Utils', () => {
         tailwind: false,
         docker: false,
         git: false,
-        install: false
+        install: false,
+        payment: 'none',
+        cicd: 'none'
     };
 
     describe('createTemplateContext', () => {

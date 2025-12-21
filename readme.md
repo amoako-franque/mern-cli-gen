@@ -1,6 +1,6 @@
 # MERN-CLI-Gen
 
-> 🚀 A powerful, production-ready CLI tool to scaffold feature-rich MERN stack projects in seconds.
+> A powerful, production-ready CLI tool to scaffold feature-rich MERN stack projects in seconds.
 
 [![GitHub stars](https://img.shields.io/github/stars/amoako-franque/mern-cli-gen?style=social)](https://github.com/amoako-franque/mern-cli-gen)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
@@ -9,21 +9,21 @@ MERN-CLI-Gen takes the pain out of starting a new full-stack project. It generat
 
 ---
 
-## ✨ Features
+## Features
 
-- 🏗️ **Full MERN Stack** — Integrated MongoDB/PostgreSQL, Express, React, and Node.js.
-- 📘 **TypeScript First** — Strict TypeScript configuration across the entire stack.
-- 🔐 **Advanced Authentication** — Multiple options: JWT, Sessions, or **Passport (Local + Google + GitHub)**.
-- 💳 **Payment Integration** — Ready-to-use **Stripe** and **Paystack** providers with webhook handling.
-- 🎨 **Modern Frontend** — React 18+ powered by **Vite** or **Next.js**, with **Tailwind CSS v4** pre-configured.
-- 🤖 **CI/CD Built-in** — Automated **GitHub Actions** for testing, linting, and Docker image deployment.
-- 🐳 **Docker Powered** — Production-ready multi-stage Dockerfiles and docker-compose.
-- 📦 **Monorepo Architecture** — Clean separation of concerns with `client`, `server`, and optional `shared` workspaces.
-- 🛡️ **Security by Design** — Helmet, CORS, Rate Limiting, and Zod request validation included.
+- **Full MERN Stack** — Integrated MongoDB/PostgreSQL, Express, React, and Node.js.
+- **TypeScript First** — Strict TypeScript configuration across the entire stack.
+- **Advanced Authentication** — Multiple options: JWT, Sessions, or **Passport (Local + Google + GitHub)**.
+- **Payment Integration** — Ready-to-use **Stripe** and **Paystack** providers with webhook handling.
+- **Modern Frontend** — React 18+ powered by **Vite** or **Next.js**, with **Tailwind CSS v4** pre-configured.
+- **CI/CD Built-in** — Automated **GitHub Actions** for testing, linting, and Docker image deployment.
+- **Docker Powered** — Production-ready multi-stage Dockerfiles and docker-compose.
+- **Monorepo Architecture** — Clean separation of concerns with `client`, `server`, and optional `shared` workspaces.
+- **Security by Design** — Helmet, CORS, Rate Limiting, and Zod request validation included.
 
 ---
 
-## 📦 Installation
+## Installation
 
 ```bash
 # Using npx (recommended - run without installing)
@@ -36,7 +36,7 @@ mern-cli-gen create my-app
 
 ---
 
-## 🚀 Quick Start
+## Quick Start
 
 1. **Scaffold your project:**
 
@@ -65,7 +65,7 @@ Your application will be live at:
 
 ---
 
-## 🎛️ CLI Reference
+## CLI Reference
 
 ```bash
 mern-cli-gen create <project-name> [options]
@@ -103,7 +103,7 @@ mern-cli-gen create api-service --mode backend --database postgresql --orm pg
 
 ---
 
-## 🛠️ Architecture
+## Architecture
 
 The generated project uses a modern monorepo structure:
 
@@ -119,7 +119,7 @@ my-app/
 
 ---
 
-## 🔧 Available Commands (Root)
+## Available Commands (Root)
 
 | Command | Description |
 |---------|-------------|
@@ -131,7 +131,7 @@ my-app/
 
 ---
 
-## 🤝 Contributing
+## Contributing
 
 We love community contributions! To get started:
 
@@ -140,13 +140,13 @@ We love community contributions! To get started:
 
 ---
 
-## 📄 License
+## License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
 ---
 
-## ⭐ Support
+## Support
 
 If this tool made your life easier, please give it a star! It helps the project grow.
 

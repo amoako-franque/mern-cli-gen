@@ -29,3 +29,6 @@ coverage/
 # Generated test projects
 test-*
 temp-*
+
+# Plans
+development_plan.md
