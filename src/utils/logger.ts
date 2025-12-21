@@ -88,12 +88,15 @@ export const logger = {
         console.log();
         console.log(chalk.green.bold('  🎉 Project created successfully!'));
         console.log();
-        console.log(chalk.white('  Next steps:'));
+        console.log(chalk.white('  Next steps to get started:'));
         console.log();
-        console.log(chalk.cyan(`    cd ${projectName}`));
-        console.log(chalk.cyan('    npm run dev'));
+        console.log(chalk.cyan(`    1. cd ${projectName}`));
+        console.log(chalk.cyan('    2. cp .env.example .env'));
+        console.log(chalk.cyan('    3. npm run dev'));
         console.log();
-        console.log(chalk.dim(`  Project location: ${projectPath}`));
+        console.log(chalk.white('  Happy coding! 🚀'));
+        console.log();
+        console.log(chalk.dim(`  Location: ${projectPath}`));
         console.log();
     },
 };
