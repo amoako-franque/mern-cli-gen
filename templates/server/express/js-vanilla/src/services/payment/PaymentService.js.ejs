@@ -1,0 +1,29 @@
+<% if (payment !=='none' ) { %>
+    <% if (payment==='stripe' ) { %>
+        const { StripeAdapter } = require('./StripeAdapter');
+        <% } else if (payment==='paystack' ) { %>
+            const { PaystackAdapter } = require('./PaystackAdapter');
+            <% } else if (payment==='mock' ) { %>
+                const { MockAdapter } = require('./MockAdapter');
+                <% } %>
+
+                    class PaymentService {
+                    constructor() {
+                    <% if (payment==='stripe' ) { %>
+                        this.provider = new StripeAdapter();
+                        <% } else if (payment==='paystack' ) { %>
+                            this.provider = new PaystackAdapter();
+                            <% } else if (payment==='mock' ) { %>
+                                this.provider = new MockAdapter();
+                                <% } %>
+                                    }
+
+                                    getProvider() {
+                                    return this.provider;
+                                    }
+                                    }
+
+                                    const paymentService = new PaymentService();
+
+                                    module.exports = { paymentService };
+                                    <% } %>

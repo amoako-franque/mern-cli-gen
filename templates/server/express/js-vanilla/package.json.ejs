@@ -1,0 +1,52 @@
+{
+"name": "<%= mode==='full' ? projectName + '-server' : projectName %>",
+    "version": "1.0.0",
+    "description": "Express API server",
+    "main": "src/index.js",
+    "scripts": {
+    "dev": "nodemon src/index.js",
+    "start": "node src/index.js"<% if (orm==='prisma' ) { %>,
+        "prisma:generate": "prisma generate",
+        "prisma:push": "prisma db push"<% } %>
+            },
+            "dependencies": {
+            "express": "^4.21.2",
+            "cors": "^2.8.5",
+            "helmet": "^8.0.0",
+            "dotenv": "^16.4.7",
+            "morgan": "^1.10.0",
+            "zod": "^3.24.1"<% if (auth !=='none' ) { %>,
+                "bcryptjs": "^2.4.3"<% } %>
+                    <% if (auth==='jwt' || auth==='passport' ) { %>,
+                        "jsonwebtoken": "^9.0.2"<% } %>
+                            <% if (auth==='session' || auth==='passport' ) { %>,
+                                "express-session": "^1.18.0"<% if (database==='mongodb' ) { %>,
+                                    "connect-mongo": "^5.1.0"<% } else if (database==='postgresql' ) { %>,
+                                        "connect-pg-simple": "^9.0.1"<% } %>
+                                            <% } %>
+                                                <% if (auth==='passport' ) { %>,
+                                                    "passport": "^0.7.0",
+                                                    "passport-local": "^1.0.0",
+                                                    "passport-google-oauth20": "^2.0.0",
+                                                    "passport-github2": "^0.1.12"<% } %>
+                                                        <% if (database==='mongodb' ) { %>,
+                                                            "mongoose": "^8.8.4"<% } else if (database==='postgresql' )
+                                                                { %>
+                                                                <% if (orm==='prisma' ) { %>,
+                                                                    "@prisma/client": "^6.1.0"<% } else { %>,
+                                                                        "pg": "^8.13.1"<% } %>
+                                                                            <% } %>
+                                                                                <% if (payment==='stripe' ) { %>,
+                                                                                    "stripe": "^17.4.0"<% } else if
+                                                                                        (payment==='paystack' ) { %>,
+                                                                                        "axios": "^1.7.9"<% } %>
+                                                                                            },
+                                                                                            "devDependencies": {
+                                                                                            "nodemon": "^3.1.9"<% if
+                                                                                                (database==='postgresql'
+                                                                                                && orm==='prisma' ) { %>
+                                                                                                ,
+                                                                                                "prisma": "^6.1.0"<% }
+                                                                                                    %>
+                                                                                                    }
+                                                                                                    }

@@ -1,0 +1,59 @@
+<% if (payment !=='none' ) { %>
+    import { Request, Response } from 'express';
+    import { z } from 'zod';
+    import { paymentService } from '../services/payment/PaymentService.js';
+
+    const checkoutSchema = z.object({
+    amount: z.number().positive('Amount must be positive'),
+    currency: z.string().length(3).optional().default('usd'),
+    successUrl: z.string().url().optional(),
+    cancelUrl: z.string().url().optional(),
+    });
+
+    export const createCheckoutSession = async (req: Request, res: Response) => {
+    try {
+    const validatedData = checkoutSchema.parse(req.body);
+    const { amount, currency, successUrl, cancelUrl } = validatedData;
+
+    // In a real app, you'd get the user from req.user (Passport/JWT)
+    const customerEmail = (req as any).user?.email || 'customer@example.com';
+
+    const session = await paymentService.getProvider().createCheckoutSession({
+    amount,
+    currency: currency || 'usd',
+    customerEmail,
+    successUrl,
+    cancelUrl,
+    metadata: {
+    userId: (req as any).user?.id
+    }
+    });
+
+    res.json(session);
+    } catch (error: any) {
+    if (error instanceof z.ZodError) {
+    res.status(400).json({ message: 'Validation failed', errors: error.errors });
+    return;
+    }
+    res.status(500).json({ message: error.message });
+    }
+    };
+
+    export const handleWebhook = async (req: Request, res: Response) => {
+    const signature = req.headers['stripe-signature'] || req.headers['x-paystack-signature'] || '';
+
+    try {
+    const result = await paymentService.getProvider().verifyWebhook(req.body, signature as string);
+
+    if (result.success) {
+    // Handle successful payment logic here
+    // e.g., Update order status, send email, etc.
+    res.status(200).send('Webhook handled successfully');
+    } else {
+    res.status(400).send('Webhook verification failed');
+    }
+    } catch (error: any) {
+    res.status(500).json({ message: error.message });
+    }
+    };
+    <% } %>

@@ -1,0 +1,191 @@
+const { z } = require('zod');
+<% if (auth==='jwt' ) { %>
+    const jwt = require('jsonwebtoken');
+    <% } %>
+
+        <% if (database==='mongodb' ) { %>
+            const User = require('../models/User');
+            <% } else { %>
+                const { UserModel: User } = require('../models/User');
+                <% } %>
+
+                    const registerSchema = z.object({
+                    email: z.string().email('Invalid email address'),
+                    password: z.string().min(6, 'Password must be at least 6 characters'),
+                    name: z.string().optional(),
+                    });
+
+                    const loginSchema = z.object({
+                    email: z.string().email('Invalid email address'),
+                    password: z.string().min(1, 'Password is required'),
+                    });
+
+                    <% if (auth==='jwt' ) { %>
+                        const signToken = (id) => {
+                        return jwt.sign({ id }, process.env.JWT_SECRET || 'secret', {
+                        expiresIn: '30d',
+                        });
+                        };
+                        <% } %>
+
+                            const register = async (req, res, next) => {
+                            try {
+                            const validatedData = registerSchema.parse(req.body);
+                            const { email, password, name } = validatedData;
+
+                            <% if (database==='mongodb' ) { %>
+                                const existingUser = await User.findOne({ email });
+                                <% } else { %>
+                                    const existingUser = await User.findByEmail(email);
+                                    <% } %>
+
+                                        if (existingUser) {
+                                        return res.status(400).json({ message: 'User already exists' });
+                                        }
+
+                                        <% if (database==='mongodb' ) { %>
+                                            const user = await User.create({ email, password, name });
+                                            const userId = user._id;
+                                            <% } else { %>
+                                                const user = await User.create({ email, password, name });
+                                                const userId = user.id;
+                                                <% } %>
+
+                                                    <% if (auth==='jwt' ) { %>
+                                                        const token = signToken(userId);
+                                                        res.status(201).json({ token, user: { id: userId, email:
+                                                        user.email, name: user.name } });
+                                                        <% } else { %>
+                                                            req.session.userId = userId;
+                                                            res.status(201).json({ message: 'Registered successfully',
+                                                            user: { id: userId, email: user.email, name: user.name } });
+                                                            <% } %>
+
+                                                                } catch (error) {
+                                                                if (error instanceof z.ZodError) {
+                                                                return res.status(400).json({ message: 'Validation
+                                                                failed', errors: error.errors });
+                                                                }
+                                                                next(error);
+                                                                }
+                                                                };
+
+                                                                const login = async (req, res, next) => {
+                                                                try {
+                                                                const validatedData = loginSchema.parse(req.body);
+                                                                const { email, password } = validatedData;
+
+                                                                <% if (database==='mongodb' ) { %>
+                                                                    const user = await User.findOne({ email
+                                                                    }).select('+password');
+                                                                    <% } else { %>
+                                                                        const user = await User.findByEmail(email);
+                                                                        <% } %>
+
+                                                                            if (!user) {
+                                                                            return res.status(401).json({ message:
+                                                                            'Invalid credentials' });
+                                                                            }
+
+                                                                            <% if (database==='mongodb' ) { %>
+                                                                                const isMatch = await
+                                                                                user.comparePassword(password);
+                                                                                const userId = user._id;
+                                                                                <% } else { %>
+                                                                                    const isMatch = await
+                                                                                    User.comparePassword(password,
+                                                                                    user.password);
+                                                                                    const userId = user.id;
+                                                                                    <% } %>
+
+                                                                                        if (!isMatch) {
+                                                                                        return res.status(401).json({
+                                                                                        message: 'Invalid credentials'
+                                                                                        });
+                                                                                        }
+
+                                                                                        <% if (auth==='jwt' ) { %>
+                                                                                            const token =
+                                                                                            signToken(userId);
+                                                                                            res.json({ token, user: {
+                                                                                            id: userId, email:
+                                                                                            user.email, name: user.name
+                                                                                            } });
+                                                                                            <% } else { %>
+                                                                                                req.session.userId =
+                                                                                                userId;
+                                                                                                res.json({ message:
+                                                                                                'Logged in
+                                                                                                successfully', user: {
+                                                                                                id: userId, email:
+                                                                                                user.email, name:
+                                                                                                user.name } });
+                                                                                                <% } %>
+
+                                                                                                    } catch (error) {
+                                                                                                    if (error instanceof
+                                                                                                    z.ZodError) {
+                                                                                                    return
+                                                                                                    res.status(400).json({
+                                                                                                    message: 'Validation
+                                                                                                    failed', errors:
+                                                                                                    error.errors });
+                                                                                                    }
+                                                                                                    next(error);
+                                                                                                    }
+                                                                                                    };
+
+                                                                                                    const logout = (req,
+                                                                                                    res) => {
+                                                                                                    <% if (auth==='jwt'
+                                                                                                        ) { %>
+                                                                                                        res.json({
+                                                                                                        message: 'Logged
+                                                                                                        out
+                                                                                                        successfully'
+                                                                                                        });
+                                                                                                        <% } else { %>
+                                                                                                            req.session.destroy((err)
+                                                                                                            => {
+                                                                                                            if (err)
+                                                                                                            return
+                                                                                                            res.status(500).json({
+                                                                                                            message:
+                                                                                                            'Could not
+                                                                                                            log out' });
+                                                                                                            res.json({
+                                                                                                            message:
+                                                                                                            'Logged out
+                                                                                                            successfully'
+                                                                                                            });
+                                                                                                            });
+                                                                                                            <% } %>
+                                                                                                                };
+
+                                                                                                                const
+                                                                                                                getMe =
+                                                                                                                async
+                                                                                                                (req,
+                                                                                                                res,
+                                                                                                                next) =>
+                                                                                                                {
+                                                                                                                try {
+                                                                                                                const
+                                                                                                                user =
+                                                                                                                req.user;
+                                                                                                                res.json({
+                                                                                                                user });
+                                                                                                                } catch
+                                                                                                                (error)
+                                                                                                                {
+                                                                                                                next(error);
+                                                                                                                }
+                                                                                                                };
+
+                                                                                                                module.exports
+                                                                                                                = {
+                                                                                                                register,
+                                                                                                                login,
+                                                                                                                logout,
+                                                                                                                getMe,
+                                                                                                                };

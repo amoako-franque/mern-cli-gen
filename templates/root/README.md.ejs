@@ -1,0 +1,110 @@
+# <%= projectNameCapitalized %>
+
+    A full-stack MERN application generated with [mern-cli-gen](https://github.com/yourusername/mern-cli-gen).
+
+    ## 🚀 Quick Start
+
+    ```bash
+    # Install all dependencies
+    npm run install:all
+
+    # Start development servers (client + server)
+    npm run dev
+    ```
+
+    ## 📁 Project Structure
+
+    ```
+    <%= projectName %>/
+        ├── client/ # React frontend (<%= frontend %>)
+            ├── server/ # Express backend
+            <% if (language==='typescript' ) { %>├── shared/ # Shared types and utilities<% } %>
+                    ├── package.json # Root workspace
+                    └── README.md
+                    ```
+
+                    ## 🔧 Available Scripts
+
+                    | Command | Description |
+                    |---------|-------------|
+                    | `npm run dev` | Start both client and server |
+                    | `npm run dev:client` | Start client only |
+                    | `npm run dev:server` | Start server only |
+                    | `npm run build` | Build both for production |
+                    | `npm run start` | Start production server |
+
+                    ## 🛠️ Tech Stack
+
+                    - **Frontend**: React 18 + <%= frontend==='vite' ? 'Vite' : 'Next.js' %> + <%= state==='redux'
+                            ? 'Redux Toolkit' : state==='zustand' ? 'Zustand' : 'React Context' %>
+                            - **Backend**: Express + Node.js
+                            - **Database**: <%= database==='mongodb' ? 'MongoDB + Mongoose' : (orm==='prisma'
+                                ? 'PostgreSQL + Prisma' : 'PostgreSQL + node-postgres' ) %>
+                                - **Language**: <%= language==='typescript' ? 'TypeScript' : 'JavaScript' %>
+                                    <% if (auth !=='none' ) { %>- **Auth**: <%= auth==='jwt' ? 'JWT' : auth==='session'
+                                            ? 'Session-based' : 'Passport (Local + OAuth)' %>
+                                            <% } %>
+                                                <% if (payment !=='none' ) { %>- **Payment**: <%= payment==='stripe'
+                                                        ? 'Stripe' : 'Paystack' %>
+                                                        <% } %>
+                                                            <% if (cicd !=='none' ) { %>- **CI/CD**: <%= cicd==='github'
+                                                                    ? 'GitHub Actions' : 'GitLab CI' %>
+                                                                    <% } %>
+
+                                                                        ## 📝 Configuration
+
+                                                                        <% if (auth==='passport' ) { %>
+                                                                            ### 🔐 OAuth Setup
+                                                                            1. **Google**: Create credentials at [Google
+                                                                            Cloud
+                                                                            Console](https://console.cloud.google.com/).
+                                                                            Set redirect URI to
+                                                                            `http://localhost:5000/api/auth/google/callback`.
+                                                                            2. **GitHub**: Create a new OAuth App in
+                                                                            [GitHub Developer
+                                                                            Settings](https://github.com/settings/developers).
+                                                                            Set redirect URI to
+                                                                            `http://localhost:5000/api/auth/github/callback`.
+                                                                            <% } %>
+
+                                                                                <% if (payment !=='none' ) { %>
+                                                                                    ### 💳 Payment Setup
+                                                                                    1. **<%= payment==='stripe'
+                                                                                        ? 'Stripe' : 'Paystack' %>**:
+                                                                                        Get your API keys from the <%=
+                                                                                            payment==='stripe'
+                                                                                            ? 'Stripe' : 'Paystack' %>
+                                                                                            dashboard.
+                                                                                            2. **Webhooks**: For local
+                                                                                            testing, use the <%=
+                                                                                                payment==='stripe'
+                                                                                                ? 'Stripe' : 'Paystack'
+                                                                                                %> CLI to forward
+                                                                                                webhooks to
+                                                                                                `http://localhost:5000/api/payment/webhook`.
+                                                                                                <% } %>
+
+                                                                                                    <% if
+                                                                                                        (cicd==='github'
+                                                                                                        ) { %>
+                                                                                                        ### 🤖 CI/CD
+                                                                                                        Setup
+                                                                                                        Add the
+                                                                                                        following
+                                                                                                        secrets to your
+                                                                                                        GitHub
+                                                                                                        repository:
+                                                                                                        -
+                                                                                                        `DOCKERHUB_USERNAME`:
+                                                                                                        Your Docker Hub
+                                                                                                        username
+                                                                                                        -
+                                                                                                        `DOCKERHUB_TOKEN`:
+                                                                                                        Your Docker Hub
+                                                                                                        access token
+                                                                                                        <% } %>
+
+                                                                                                            ## 📄
+                                                                                                            License
+
+                                                                                                            MIT

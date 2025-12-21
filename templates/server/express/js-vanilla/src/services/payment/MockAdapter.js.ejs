@@ -1,0 +1,31 @@
+<% if (payment==='mock' ) { %>
+    class MockAdapter {
+    constructor() {
+    this.name = 'mock';
+    }
+
+    async createCheckoutSession(options) {
+    console.log('--- MOCK PAYMENT SESSION CREATED ---');
+    console.log('Amount:', options.amount);
+    console.log('Currency:', options.currency);
+    console.log('Customer:', options.customerEmail);
+    console.log('-----------------------------------');
+
+    const mockSessionId = `mock_${Math.random().toString(36).substring(7)}`;
+
+    return {
+    url: `${options.successUrl}?session_id=${mockSessionId}`,
+    sessionId: mockSessionId,
+    };
+    }
+
+    async verifyWebhook(payload, signature) {
+    return {
+    success: true,
+    data: payload,
+    };
+    }
+    }
+
+    module.exports = { MockAdapter };
+    <% } %>

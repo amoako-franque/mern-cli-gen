@@ -1,0 +1,68 @@
+import express, { Application } from 'express';
+import cors from 'cors';
+import helmet from 'helmet';
+import morgan from 'morgan';
+import { router } from './routes/index.js';
+import { errorHandler } from './middleware/errorHandler.js';
+<% if (auth==='session' || auth==='passport' ) { %>
+    import session from 'express-session';
+    <% if (auth==='passport' ) { %>
+        import passport from 'passport';
+        import { configurePassport } from './config/passport.js';
+        <% } %>
+            <% if (database==='mongodb' ) { %>
+                import MongoStore from 'connect-mongo';
+                <% } else if (database==='postgresql' ) { %>
+                    import pgSession from 'connect-pg-simple';
+                    import { pool } from './config/db.js';
+                    const PgStore = pgSession(session);
+                    <% } %>
+                        <% } %>
+
+                            const app: Application = express();
+
+                            // Middleware
+                            app.use(helmet());
+                            app.use(cors());
+                            app.use(morgan('dev'));
+                            app.use(express.json());
+                            app.use(express.urlencoded({ extended: true }));
+
+                            <% if (auth==='session' || auth==='passport' ) { %>
+                                // Session configuration
+                                app.use(session({
+                                secret: process.env.SESSION_SECRET || 'secret',
+                                resave: false,
+                                saveUninitialized: false,
+                                cookie: {
+                                secure: process.env.NODE_ENV === 'production',
+                                maxAge: 30 * 24 * 60 * 60 * 1000 // 30 days
+                                },
+                                <% if (database==='mongodb' ) { %>
+                                    store: MongoStore.create({
+                                    mongoUrl: process.env.MONGODB_URI || 'mongodb://localhost:27017/<%= projectName %>'
+                                        })
+                                        <% } else if (database==='postgresql' ) { %>
+                                            store: new PgStore({
+                                            pool,
+                                            tableName: 'session',
+                                            createTableIfMissing: true
+                                            })
+                                            <% } %>
+                                                }));
+
+                                                <% if (auth==='passport' ) { %>
+                                                    // Passport configuration
+                                                    configurePassport();
+                                                    app.use(passport.initialize());
+                                                    app.use(passport.session());
+                                                    <% } %>
+                                                        <% } %>
+
+                                                            // Routes
+                                                            app.use('/api', router);
+
+                                                            // Error handling
+                                                            app.use(errorHandler);
+
+                                                            export default app;

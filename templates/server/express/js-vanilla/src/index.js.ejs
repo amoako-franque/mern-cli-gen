@@ -1,0 +1,20 @@
+const app = require('./app');
+const { config } = require('./config/index');
+const { connectDB } = require('./config/db');
+
+const PORT = config.port;
+
+const startServer = async () => {
+try {
+await connectDB();
+app.listen(PORT, () => {
+console.log(`🚀 Server running on http://localhost:${PORT}`);
+console.log(`📝 Environment: ${config.nodeEnv}`);
+});
+} catch (error) {
+console.error('Failed to start server:', error);
+process.exit(1);
+}
+};
+
+startServer();

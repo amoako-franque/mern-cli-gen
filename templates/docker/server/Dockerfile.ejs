@@ -1,0 +1,43 @@
+# Build stage
+FROM node:20-alpine as build
+
+WORKDIR /app
+
+# Copy package files
+COPY package*.json ./
+
+# Install dependencies
+RUN npm ci
+
+# Copy source code
+COPY . .
+
+<% if (language === 'typescript') { %>
+# Build TypeScript
+RUN npm run build
+<% } %>
+
+# Production stage
+FROM node:20-alpine
+
+WORKDIR /app
+
+# Copy package files
+COPY package*.json ./
+
+# Install production dependencies only
+RUN npm ci --only=production
+
+<% if (language === 'typescript') { %>
+# Copy built files
+COPY --from=build /app/dist ./dist
+<% } else { %>
+# Copy source files
+COPY --from=build /app/src ./src
+<% } %>
+
+# Expose port
+EXPOSE <%= typeof port !== 'undefined' ? port : 5000 %>
+
+# Start application
+CMD ["npm", "start"]

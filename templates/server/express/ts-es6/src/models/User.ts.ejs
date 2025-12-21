@@ -1,0 +1,182 @@
+<% if (database==='mongodb' ) { %>
+    import mongoose, { Schema, Document } from 'mongoose';
+    <% if (auth !=='none' ) { %>
+        import bcrypt from 'bcryptjs';
+        import crypto from 'crypto';
+        <% } %>
+
+            export interface IUser extends Document {
+            email: string;
+            <% if (auth !=='none' ) { %>
+                password?: string;
+                comparePassword(candidatePassword: string): Promise<boolean>;
+                    <% } %>
+                        <% if (auth==='passport' ) { %>
+                            googleId?: string;
+                            githubId?: string;
+                            <% } %>
+                                name?: string;
+                                }
+
+                                const UserSchema: Schema = new Schema({
+                                email: { type: String, required: true, unique: true },
+                                <% if (auth !=='none' ) { %>
+                                    password: { type: String, select: false },
+                                    <% } %>
+                                        <% if (auth==='passport' ) { %>
+                                            googleId: { type: String, unique: true, sparse: true },
+                                            githubId: { type: String, unique: true, sparse: true },
+                                            <% } %>
+                                                name: { type: String },
+                                                }, { timestamps: true });
+
+                                                <% if (auth !=='none' ) { %>
+                                                    UserSchema.pre<IUser>('save', async function(next) {
+                                                        if (!this.isModified('password')) return next();
+                                                        if (this.password) {
+                                                        const preHashed =
+                                                        crypto.createHash('sha256').update(this.password).digest('hex');
+                                                        this.password = await bcrypt.hash(preHashed, 12);
+                                                        }
+                                                        next();
+                                                        });
+
+                                                        UserSchema.methods.comparePassword = async
+                                                        function(candidatePassword: string): Promise<boolean> {
+                                                            if (!this.password) return false;
+                                                            const preHashed =
+                                                            crypto.createHash('sha256').update(candidatePassword).digest('hex');
+                                                            return await bcrypt.compare(preHashed, this.password);
+                                                            };
+                                                            <% } %>
+
+                                                                export default mongoose.model<IUser>('User',
+                                                                    UserSchema);
+
+                                                                    <% } else if (database==='postgresql' && orm==='pg'
+                                                                        ) { %>
+                                                                        import { pool } from '../config/db';
+                                                                        <% if (auth !=='none' ) { %>
+                                                                            import bcrypt from 'bcryptjs';
+                                                                            import crypto from 'crypto';
+                                                                            <% } %>
+
+                                                                                export interface User {
+                                                                                id?: number;
+                                                                                email: string;
+                                                                                <% if (auth !=='none' ) { %>
+                                                                                    password?: string;
+                                                                                    <% } %>
+                                                                                        name?: string;
+                                                                                        created_at?: Date;
+                                                                                        }
+
+                                                                                        export class UserModel {
+                                                                                        static async create(user: User):
+                                                                                        Promise<User> {
+                                                                                            const { email, name,
+                                                                                            password } = user;
+                                                                                            <% if (auth !=='none' ) { %>
+                                                                                                const preHashed =
+                                                                                                password ?
+                                                                                                crypto.createHash('sha256').update(password).digest('hex')
+                                                                                                : null;
+                                                                                                const hashedPassword =
+                                                                                                preHashed ? await
+                                                                                                bcrypt.hash(preHashed,
+                                                                                                12) : null;
+                                                                                                const query = 'INSERT
+                                                                                                INTO users (email,
+                                                                                                password, name) VALUES
+                                                                                                ($1, $2, $3)
+                                                                                                RETURNING *';
+                                                                                                const values = [email,
+                                                                                                hashedPassword,
+                                                                                                name];
+                                                                                                <% } else { %>
+                                                                                                    const query =
+                                                                                                    'INSERT INTO users
+                                                                                                    (email, name) VALUES
+                                                                                                    ($1, $2)
+                                                                                                    RETURNING *';
+                                                                                                    const values =
+                                                                                                    [email, name];
+                                                                                                    <% } %>
+
+                                                                                                        const result =
+                                                                                                        await
+                                                                                                        pool.query(query,
+                                                                                                        values);
+                                                                                                        return
+                                                                                                        result.rows[0];
+                                                                                                        }
+
+                                                                                                        static async
+                                                                                                        findByEmail(email:
+                                                                                                        string): Promise
+                                                                                                        <User | null> {
+                                                                                                            const query
+                                                                                                            = 'SELECT *
+                                                                                                            FROM
+                                                                                                            users WHERE
+                                                                                                            email = $1';
+                                                                                                            const result
+                                                                                                            = await
+                                                                                                            pool.query(query,
+                                                                                                            [email]);
+                                                                                                            return
+                                                                                                            result.rows[0]
+                                                                                                            ||
+                                                                                                            null;
+                                                                                                            }
+
+                                                                                                            static async
+                                                                                                            comparePassword(password:
+                                                                                                            string,
+                                                                                                            hashedPassword:
+                                                                                                            string):
+                                                                                                            Promise
+                                                                                                            <boolean> {
+                                                                                                                const
+                                                                                                                preHashed
+                                                                                                                =
+                                                                                                                crypto.createHash('sha256').update(password).digest('hex');
+                                                                                                                return
+                                                                                                                await
+                                                                                                                bcrypt.compare(preHashed,
+                                                                                                                hashedPassword);
+                                                                                                                }
+
+                                                                                                                static
+                                                                                                                async
+                                                                                                                findById(id:
+                                                                                                                number):
+                                                                                                                Promise
+                                                                                                                <User |
+                                                                                                                    null>
+                                                                                                                    {
+                                                                                                                    const
+                                                                                                                    query
+                                                                                                                    =
+                                                                                                                    'SELECT
+                                                                                                                    *
+                                                                                                                    FROM
+                                                                                                                    users
+                                                                                                                    WHERE
+                                                                                                                    id
+                                                                                                                    =
+                                                                                                                    $1';
+                                                                                                                    const
+                                                                                                                    result
+                                                                                                                    =
+                                                                                                                    await
+                                                                                                                    pool.query(query,
+                                                                                                                    [id]);
+                                                                                                                    return
+                                                                                                                    result.rows[0]
+                                                                                                                    ||
+                                                                                                                    null;
+                                                                                                                    }
+                                                                                                                    }
+                                                                                                                    <% }
+                                                                                                                        %>

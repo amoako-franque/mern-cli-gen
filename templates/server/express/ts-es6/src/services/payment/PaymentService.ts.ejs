@@ -1,0 +1,30 @@
+<% if (payment !=='none' ) { %>
+    import { PaymentProvider } from './PaymentProvider.js';
+    <% if (payment==='stripe' ) { %>
+        import { StripeAdapter } from './StripeAdapter.js';
+        <% } else if (payment==='paystack' ) { %>
+            import { PaystackAdapter } from './PaystackAdapter.js';
+            <% } else if (payment==='mock' ) { %>
+                import { MockAdapter } from './MockAdapter.js';
+                <% } %>
+
+                    export class PaymentService {
+                    private provider: PaymentProvider;
+
+                    constructor() {
+                    <% if (payment==='stripe' ) { %>
+                        this.provider = new StripeAdapter();
+                        <% } else if (payment==='paystack' ) { %>
+                            this.provider = new PaystackAdapter();
+                            <% } else if (payment==='mock' ) { %>
+                                this.provider = new MockAdapter();
+                                <% } %>
+                                    }
+
+                                    getProvider(): PaymentProvider {
+                                    return this.provider;
+                                    }
+                                    }
+
+                                    export const paymentService = new PaymentService();
+                                    <% } %>

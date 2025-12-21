@@ -1,0 +1,48 @@
+import { useAuth } from '../context/AuthContext';
+
+const Dashboard = () => {
+const { user } = useAuth();
+
+return (
+<div className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
+    <div className="px-4 py-6 sm:px-0">
+        <div
+            className="border-4 border-dashed border-gray-200 rounded-lg h-96 flex flex-col items-center justify-center">
+            <h1 className="text-3xl font-bold text-gray-900">Welcome, {user?.email}!</h1>
+            <p className="mt-4 text-gray-600">This is your dashboard. Only authenticated users can see this.</p>
+            <div className="mt-8 bg-white shadow overflow-hidden sm:rounded-lg w-full max-w-xl">
+                <div className="px-4 py-5 sm:px-6">
+                    <h3 className="text-lg leading-6 font-medium text-gray-900">User Profile Information</h3>
+                </div>
+                <div className="border-t border-gray-200">
+                    <dl>
+                        <div className="bg-gray-50 px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
+                            <dt className="text-sm font-medium text-gray-500">Email</dt>
+                            <dd className="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">{user?.email}</dd>
+                        </div>
+                        <div className="bg-white px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
+                            <dt className="text-sm font-medium text-gray-500">Role</dt>
+                            <dd className="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">{user?.role}</dd>
+                        </div>
+                        <% if (auth==='passport' ) { %>
+                            <div className="bg-gray-50 px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
+                                <dt className="text-sm font-medium text-gray-500">Connected Accounts</dt>
+                                <dd className="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">
+                                    <ul className="list-disc ml-4">
+                                        {user?.googleId && <li>Google Connected</li>}
+                                        {user?.githubId && <li>GitHub Connected</li>}
+                                        {!user?.googleId && !user?.githubId && <li>No social accounts connected</li>}
+                                    </ul>
+                                </dd>
+                            </div>
+                            <% } %>
+                    </dl>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+);
+};
+
+export default Dashboard;

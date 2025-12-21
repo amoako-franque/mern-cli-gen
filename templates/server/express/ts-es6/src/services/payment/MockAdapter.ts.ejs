@@ -1,0 +1,29 @@
+<% if (payment==='mock' ) { %>
+    import { PaymentProvider, CheckoutSessionOptions } from './PaymentProvider.js';
+
+    export class MockAdapter implements PaymentProvider {
+    public name = 'mock';
+
+    async createCheckoutSession(options: CheckoutSessionOptions): Promise<{ url: string; sessionId: string }> {
+        console.log('--- MOCK PAYMENT SESSION CREATED ---');
+        console.log('Amount:', options.amount);
+        console.log('Currency:', options.currency);
+        console.log('Customer:', options.customerEmail);
+        console.log('-----------------------------------');
+
+        const mockSessionId = `mock_${Math.random().toString(36).substring(7)}`;
+
+        return {
+        url: `${options.successUrl}?session_id=${mockSessionId}`,
+        sessionId: mockSessionId,
+        };
+        }
+
+        async verifyWebhook(payload: any, signature: string): Promise<{ success: boolean; data: any }> {
+            return {
+            success: true,
+            data: payload,
+            };
+            }
+            }
+            <% } %>

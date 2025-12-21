@@ -1,0 +1,41 @@
+generator client {
+provider = "prisma-client-js"
+}
+
+datasource db {
+<% if (database==='mongodb' ) { %>
+    provider = "mongodb"
+    url = env("DATABASE_URL")
+    <% } else { %>
+        provider = "postgresql"
+        url = env("DATABASE_URL")
+        <% } %>
+            }
+
+            model User {
+            <% if (database==='mongodb' ) { %>
+                id String @id @default(auto()) @map("_id") @db.ObjectId
+                email String @unique
+                password String?
+                name String?
+                <% if (auth==='passport' ) { %>
+                    googleId String? @unique
+                    githubId String? @unique
+                    <% } %>
+                        createdAt DateTime @default(now())
+                        updatedAt DateTime @updatedAt
+                        <% } else { %>
+                            id Int @id @default(autoincrement())
+                            email String @unique
+                            password String?
+                            name String?
+                            <% if (auth==='passport' ) { %>
+                                googleId String? @unique @map("google_id")
+                                githubId String? @unique @map("github_id")
+                                <% } %>
+                                    createdAt DateTime @default(now()) @map("created_at")
+                                    updatedAt DateTime @updatedAt @map("updated_at")
+
+                                    @@map("users")
+                                    <% } %>
+                                        }

@@ -1,0 +1,16 @@
+<% if (payment !=='none' ) { %>
+    export interface CheckoutSessionOptions {
+    amount: number;
+    currency: string;
+    customerEmail: string;
+    successUrl: string;
+    cancelUrl: string;
+    metadata?: Record<string, any>;
+        }
+
+        export interface PaymentProvider {
+        name: string;
+        createCheckoutSession(options: CheckoutSessionOptions): Promise<{ url: string; sessionId: string }>;
+            verifyWebhook(payload: any, signature: string): Promise<{ success: boolean; data: any }>;
+                }
+                <% } %>

@@ -1,0 +1,15 @@
+<% if (payment !=='none' ) { %>
+    import { Router } from 'express';
+    import { createCheckoutSession, handleWebhook } from '../controllers/paymentController.js';
+    import { protect } from '../middleware/auth.js';
+
+    const router = Router();
+
+    // Create checkout session (protected)
+    router.post('/create-checkout-session', protect, createCheckoutSession);
+
+    // Webhook (unprotected, verification happens in controller)
+    router.post('/webhook', handleWebhook);
+
+    export default router;
+    <% } %>

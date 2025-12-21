@@ -1,0 +1,52 @@
+<% if (database==='mongodb' ) { %>
+    const mongoose = require('mongoose');
+    const { config } = require('./index');
+
+    const connectDB = async () => {
+    try {
+    await mongoose.connect(config.mongoUri);
+    console.log('📦 Connected to MongoDB (Mongoose)');
+    } catch (error) {
+    console.error('❌ MongoDB connection error:', error);
+    process.exit(1);
+    }
+    };
+    module.exports = { connectDB };
+    <% } else if (database==='postgresql' ) { %>
+        <% if (orm==='prisma' ) { %>
+            const { PrismaClient } = require('@prisma/client');
+            const prisma = new PrismaClient();
+
+            const connectDB = async () => {
+            try {
+            await prisma.$connect();
+            console.log('📦 Connected to PostgreSQL (Prisma)');
+            } catch (error) {
+            console.error('❌ Prisma connection error:', error);
+            process.exit(1);
+            }
+            };
+            module.exports = { connectDB, prisma };
+            <% } else { %>
+                const pg = require('pg');
+                const { config } = require('./index');
+                const { Pool } = pg;
+
+                const pool = new Pool({
+                connectionString: config.databaseUrl,
+                });
+
+                const connectDB = async () => {
+                try {
+                await pool.connect();
+                console.log('📦 Connected to PostgreSQL (pg)');
+                } catch (error) {
+                console.error('❌ PostgreSQL connection error:', error);
+                process.exit(1);
+                }
+                };
+                module.exports = { connectDB, pool };
+                <% } %>
+                    <% } else { %>
+                        module.exports = { connectDB: async () => { console.log('No database configured'); } };
+                        <% } %>

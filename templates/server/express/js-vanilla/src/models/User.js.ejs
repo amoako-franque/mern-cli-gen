@@ -1,0 +1,99 @@
+<% if (database==='mongodb' ) { %>
+    const mongoose = require('mongoose');
+    <% if (auth !=='none' ) { %>
+        const bcrypt = require('bcryptjs');
+        const crypto = require('crypto');
+        <% } %>
+
+            const UserSchema = new mongoose.Schema({
+            email: { type: String, required: true, unique: true },
+            <% if (auth !=='none' ) { %>
+                password: { type: String, select: false },
+                <% } %>
+                    <% if (auth==='passport' ) { %>
+                        googleId: { type: String, unique: true, sparse: true },
+                        githubId: { type: String, unique: true, sparse: true },
+                        <% } %>
+                            name: { type: String },
+                            }, { timestamps: true });
+
+                            <% if (auth !=='none' ) { %>
+                                UserSchema.pre('save', async function(next) {
+                                if (!this.isModified('password')) return next();
+                                if (this.password) {
+                                const preHashed = crypto.createHash('sha256').update(this.password).digest('hex');
+                                this.password = await bcrypt.hash(preHashed, 12);
+                                }
+                                next();
+                                });
+
+                                UserSchema.methods.comparePassword = async function(candidatePassword) {
+                                if (!this.password) return false;
+                                const preHashed = crypto.createHash('sha256').update(candidatePassword).digest('hex');
+                                return await bcrypt.compare(preHashed, this.password);
+                                };
+                                <% } %>
+
+                                    module.exports = mongoose.model('User', UserSchema);
+
+                                    <% } else if (database==='postgresql' && orm==='pg' ) { %>
+                                        const { pool } = require('../config/db');
+                                        <% if (auth !=='none' ) { %>
+                                            const bcrypt = require('bcryptjs');
+                                            const crypto = require('crypto');
+                                            <% } %>
+
+                                                class UserModel {
+                                                static async create(user) {
+                                                <% if (auth==='passport' ) { %>
+                                                    const { email, name, password, googleId, githubId } = user;
+                                                    const preHashed = password ?
+                                                    crypto.createHash('sha256').update(password).digest('hex') : null;
+                                                    const hashedPassword = preHashed ? await bcrypt.hash(preHashed, 12)
+                                                    : null;
+                                                    const query = 'INSERT INTO users (email, password, name, google_id,
+                                                    github_id) VALUES ($1, $2, $3, $4, $5) RETURNING *';
+                                                    const values = [email, hashedPassword, name, googleId, githubId];
+                                                    <% } else if (auth !=='none' ) { %>
+                                                        const { email, name, password } = user;
+                                                        const preHashed = password ?
+                                                        crypto.createHash('sha256').update(password).digest('hex') :
+                                                        null;
+                                                        const hashedPassword = preHashed ? await bcrypt.hash(preHashed,
+                                                        12) : null;
+                                                        const query = 'INSERT INTO users (email, password, name) VALUES
+                                                        ($1, $2, $3) RETURNING *';
+                                                        const values = [email, hashedPassword, name];
+                                                        <% } else { %>
+                                                            const query = 'INSERT INTO users (email, name) VALUES ($1,
+                                                            $2)
+                                                            RETURNING
+                                                            *';
+                                                            const values = [email, name];
+                                                            <% } %>
+
+                                                                const result = await pool.query(query, values);
+                                                                return result.rows[0];
+                                                                }
+
+                                                                static async findByEmail(email) {
+                                                                const query = 'SELECT * FROM users WHERE email = $1';
+                                                                const result = await pool.query(query, [email]);
+                                                                return result.rows[0] || null;
+                                                                }
+
+                                                                static async comparePassword(password, hashedPassword) {
+                                                                const preHashed =
+                                                                crypto.createHash('sha256').update(password).digest('hex');
+                                                                return await bcrypt.compare(preHashed, hashedPassword);
+                                                                }
+
+                                                                static async findById(id) {
+                                                                const query = 'SELECT * FROM users WHERE id = $1';
+                                                                const result = await pool.query(query, [id]);
+                                                                return result.rows[0] || null;
+                                                                }
+                                                                }
+
+                                                                module.exports = { UserModel };
+                                                                <% } %>

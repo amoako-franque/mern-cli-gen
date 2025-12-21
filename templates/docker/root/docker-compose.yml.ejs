@@ -1,0 +1,79 @@
+version: '3.8'
+
+services:
+<% if (mode==='full' || mode==='server' ) { %>
+    server:
+    build: ./server
+    ports:
+    - "<%= typeof port !=='undefined' ? port : 5000 %>:5000"
+        environment:
+        - NODE_ENV=production
+        - PORT=5000
+        <% if (database==='mongodb' ) { %>
+            - MONGODB_URI=mongodb://mongo:27017/<%= projectName %>
+                <% } else if (database==='postgresql' ) { %>
+                    <% if (orm==='prisma' ) { %>
+                        - DATABASE_URL=postgresql://user:password@postgres:5432/<%= projectName %>?schema=public
+                            <% } else { %>
+                                - DATABASE_URL=postgresql://user:password@postgres:5432/<%= projectName %>
+                                    <% } %>
+                                        <% } %>
+                                            <% if (auth !=='none' ) { %>
+                                                - JWT_SECRET=docker-secret-key-change-me
+                                                <% } %>
+                                                    depends_on:
+                                                    <% if (database==='mongodb' ) { %>
+                                                        - mongo
+                                                        <% } else if (database==='postgresql' ) { %>
+                                                            - postgres
+                                                            <% } %>
+
+                                                                <% if (database==='mongodb' ) { %>
+                                                                    mongo:
+                                                                    image: mongo:latest
+                                                                    ports:
+                                                                    - "27017:27017"
+                                                                    volumes:
+                                                                    - mongo-data:/data/db
+                                                                    <% } else if (database==='postgresql' ) { %>
+                                                                        postgres:
+                                                                        image: postgres:15-alpine
+                                                                        ports:
+                                                                        - "5432:5432"
+                                                                        environment:
+                                                                        - POSTGRES_USER=user
+                                                                        - POSTGRES_PASSWORD=password
+                                                                        - POSTGRES_DB=<%= projectName %>
+                                                                            volumes:
+                                                                            - postgres-data:/var/lib/postgresql/data
+                                                                            <% } %>
+                                                                                <% } %>
+
+                                                                                    <% if (mode==='full' ||
+                                                                                        mode==='frontend' ) { %>
+                                                                                        client:
+                                                                                        build: ./client
+                                                                                        ports:
+                                                                                        - "80:80"
+                                                                                        depends_on:
+                                                                                        <% if (mode==='full' ) { %>
+                                                                                            - server
+                                                                                            <% } %>
+                                                                                                <% } %>
+
+                                                                                                    volumes:
+                                                                                                    <% if (mode==='full'
+                                                                                                        ||
+                                                                                                        mode==='server'
+                                                                                                        ) { %>
+                                                                                                        <% if
+                                                                                                            (database==='mongodb'
+                                                                                                            ) { %>
+                                                                                                            mongo-data:
+                                                                                                            <% } else if
+                                                                                                                (database==='postgresql'
+                                                                                                                ) { %>
+                                                                                                                postgres-data:
+                                                                                                                <% } %>
+                                                                                                                    <% }
+                                                                                                                        %>
