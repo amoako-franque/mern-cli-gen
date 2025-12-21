@@ -1,10 +1,10 @@
+import { execa } from 'execa';
+import { ProjectGenerator } from '../../generators/index.js';
 import type { CLIOptions, ProjectConfig } from '../../types/index.js';
-import { validateProjectName, validateOptions } from '../../utils/validation.js';
 import { directoryExists, getCwd, joinPath } from '../../utils/fileUtils.js';
 import { logger, withSpinner } from '../../utils/logger.js';
-import { runProjectPrompts, displayConfigSummary, confirmGeneration } from '../prompts/index.js';
-import { ProjectGenerator } from '../../generators/index.js';
-import { execa } from 'execa';
+import { validateOptions, validateProjectName } from '../../utils/validation.js';
+import { confirmGeneration, displayConfigSummary, runProjectPrompts } from '../prompts/index.js';
 
 /**
  * Execute the create command
@@ -15,7 +15,7 @@ export async function createCommand(
 ): Promise<void> {
     logger.banner();
 
-    // Validate project name
+
     const nameValidation = validateProjectName(projectName);
     if (!nameValidation.valid) {
         logger.error(`Invalid project name: ${projectName}`);
@@ -27,14 +27,14 @@ export async function createCommand(
         nameValidation.warnings.forEach((warn) => logger.warn(`  - ${warn}`));
     }
 
-    // Check if directory exists
+
     const projectPath = joinPath(getCwd(), projectName);
     if (await directoryExists(projectPath)) {
         logger.error(`Directory "${projectName}" already exists`);
         process.exit(1);
     }
 
-    // Validate CLI options
+
     const optionsValidation = validateOptions(options);
     if (!optionsValidation.valid) {
         optionsValidation.errors.forEach((err) => logger.error(err));
@@ -43,7 +43,7 @@ export async function createCommand(
 
     optionsValidation.warnings.forEach((warn) => logger.warn(warn));
 
-    // Run interactive prompts (if needed)
+
     let config: ProjectConfig;
 
     if (options.dryRun) {
@@ -59,10 +59,10 @@ export async function createCommand(
         process.exit(0);
     }
 
-    // Display summary
+
     displayConfigSummary(config);
 
-    // Confirm generation
+
     if (!options.dryRun) {
         const confirmed = await confirmGeneration();
         if (!confirmed) {
@@ -71,7 +71,7 @@ export async function createCommand(
         }
     }
 
-    // Dry run - just show what would be created
+
     if (options.dryRun) {
         logger.title('Dry Run Summary');
         logger.info('The following would be created:');
@@ -96,7 +96,7 @@ export async function createCommand(
         return;
     }
 
-    // Generate project
+
     logger.newLine();
     logger.title('Generating Project');
 
@@ -109,7 +109,7 @@ export async function createCommand(
         process.exit(1);
     }
 
-    // Initialize git
+
     if (config.git) {
         await withSpinner('Initializing git repository', async () => {
             await execa('git', ['init'], { cwd: result.projectPath });
@@ -120,12 +120,12 @@ export async function createCommand(
         });
     }
 
-    // Install dependencies
+
     if (config.install) {
         await installDependencies(result.projectPath, config);
     }
 
-    // Show completion message
+
     logger.complete(config.projectName, result.projectPath);
 }
 
@@ -139,17 +139,14 @@ async function installDependencies(
     const mode = config.mode;
 
     if (mode === 'full') {
-        // Install root dependencies
         await withSpinner('Installing root dependencies', async () => {
             await execa('npm', ['install'], { cwd: projectPath });
         });
 
-        // Install client dependencies
         await withSpinner('Installing client dependencies', async () => {
             await execa('npm', ['install'], { cwd: joinPath(projectPath, 'client') });
         });
 
-        // Install server dependencies
         await withSpinner('Installing server dependencies', async () => {
             await execa('npm', ['install'], { cwd: joinPath(projectPath, 'server') });
         });

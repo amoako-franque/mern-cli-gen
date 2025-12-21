@@ -1,16 +1,16 @@
 import inquirer from 'inquirer';
 import type {
-    ProjectConfig,
+    AuthType,
+    CicdProvider,
     CLIOptions,
+    Database,
+    Frontend,
     GenerationMode,
     Language,
     ModuleSystem,
-    Frontend,
-    Database,
-    AuthType,
-    StateManagement,
     PaymentProvider,
-    CicdProvider,
+    ProjectConfig,
+    StateManagement,
 } from '../../types/index.js';
 import { logger } from '../../utils/index.js';
 
@@ -25,7 +25,7 @@ export async function runProjectPrompts(
         projectName,
     };
 
-    // Mode prompt (if not provided)
+
     if (!options.mode) {
         const { mode } = await inquirer.prompt<{ mode: GenerationMode }>([
             {
@@ -45,7 +45,7 @@ export async function runProjectPrompts(
         answers.mode = options.mode;
     }
 
-    // Language prompt (if not provided)
+
     if (!options.typescript && !options.javascript) {
         const { language } = await inquirer.prompt<{ language: Language }>([
             {
@@ -64,7 +64,7 @@ export async function runProjectPrompts(
         answers.language = options.typescript ? 'typescript' : 'javascript';
     }
 
-    // Module system prompt (only for JavaScript)
+
     if (answers.language === 'javascript' && !options.es6 && !options.vanilla) {
         const { moduleSystem } = await inquirer.prompt<{ moduleSystem: ModuleSystem }>([
             {
@@ -85,7 +85,7 @@ export async function runProjectPrompts(
         answers.moduleSystem = options.vanilla ? 'vanilla' : 'es6';
     }
 
-    // Frontend framework prompt (for full or frontend mode)
+
     if ((answers.mode === 'full' || answers.mode === 'frontend') && !options.frontend) {
         const { frontend } = await inquirer.prompt<{ frontend: Frontend }>([
             {
@@ -104,7 +104,7 @@ export async function runProjectPrompts(
         answers.frontend = options.frontend || 'vite';
     }
 
-    // State management prompt (for full or frontend mode)
+
     if ((answers.mode === 'full' || answers.mode === 'frontend') && !options.state) {
         const { state } = await inquirer.prompt<{ state: StateManagement }>([
             {
@@ -125,7 +125,7 @@ export async function runProjectPrompts(
         answers.state = options.state || 'zustand';
     }
 
-    // Database prompt (for full or backend mode)
+
     if ((answers.mode === 'full' || answers.mode === 'backend') && !options.database) {
         const { database } = await inquirer.prompt<{ database: Database }>([
             {
@@ -144,7 +144,7 @@ export async function runProjectPrompts(
         answers.database = options.database || 'mongodb';
     }
 
-    // ORM prompt
+
     if (answers.database === 'mongodb') {
         answers.orm = 'mongoose';
     } else if (answers.database === 'postgresql') {
@@ -169,7 +169,7 @@ export async function runProjectPrompts(
         answers.orm = 'none';
     }
 
-    // Auth prompt (for full or backend mode)
+
     if ((answers.mode === 'full' || answers.mode === 'backend') && !options.auth) {
         const { auth } = await inquirer.prompt<{ auth: AuthType }>([
             {
@@ -190,7 +190,7 @@ export async function runProjectPrompts(
         answers.auth = options.auth || 'jwt';
     }
 
-    // Docker prompt
+
     if (options.docker === undefined) {
         const { docker } = await inquirer.prompt<{ docker: boolean }>([
             {
@@ -205,7 +205,7 @@ export async function runProjectPrompts(
         answers.docker = options.docker ?? true;
     }
 
-    // Payment prompt (for full or backend mode)
+
     if ((answers.mode === 'full' || answers.mode === 'backend') && !options.payment) {
         const { payment } = await inquirer.prompt<{ payment: PaymentProvider }>([
             {
@@ -226,7 +226,7 @@ export async function runProjectPrompts(
         answers.payment = options.payment || 'none';
     }
 
-    // Tailwind prompt
+
     if (options.tailwind === undefined && (answers.mode === 'full' || answers.mode === 'frontend')) {
         const { tailwind } = await inquirer.prompt<{ tailwind: boolean }>([
             {
@@ -241,7 +241,7 @@ export async function runProjectPrompts(
         answers.tailwind = options.tailwind ?? true;
     }
 
-    // Git prompt
+
     if (options.git === undefined) {
         const { git } = await inquirer.prompt<{ git: boolean }>([
             {
@@ -256,7 +256,7 @@ export async function runProjectPrompts(
         answers.git = options.git ?? true;
     }
 
-    // CI/CD prompt
+
     if (options.cicd === undefined) {
         const { cicd } = await inquirer.prompt<{ cicd: CicdProvider }>([
             {
@@ -275,7 +275,7 @@ export async function runProjectPrompts(
         answers.cicd = options.cicd ?? 'none';
     }
 
-    // Install prompt
+
     if (options.install === undefined) {
         const { install } = await inquirer.prompt<{ install: boolean }>([
             {

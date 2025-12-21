@@ -9,7 +9,6 @@ const __dirname = path.dirname(__filename);
  * Get the root directory of the CLI package
  */
 export function getPackageRoot(): string {
-    // Navigate from dist/utils to package root
     return path.resolve(__dirname, '..', '..');
 }
 

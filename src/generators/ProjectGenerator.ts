@@ -1,19 +1,19 @@
-import type { ProjectConfig, GeneratorResult, TemplateContext } from '../types/index.js';
+import type { GeneratorResult, ProjectConfig, TemplateContext } from '../types/index.js';
 import {
+    absolutePath,
     createDirectory,
     directoryExists,
     getCwd,
     joinPath,
-    absolutePath,
 } from '../utils/fileUtils.js';
+import { logger, withSpinner } from '../utils/logger.js';
 import {
     createTemplateContext,
-    processTemplateDirectory,
-    getRootTemplatePath,
-    getDockerTemplatePath,
     getCicdTemplatePath,
+    getDockerTemplatePath,
+    getRootTemplatePath,
+    processTemplateDirectory,
 } from '../utils/templateUtils.js';
-import { logger, withSpinner } from '../utils/logger.js';
 import { ClientGenerator } from './ClientGenerator.js';
 import { ServerGenerator } from './ServerGenerator.js';
 
@@ -39,13 +39,13 @@ export class ProjectGenerator {
      */
     async generate(): Promise<GeneratorResult> {
         try {
-            // Check if directory already exists
+
             if (await directoryExists(this.projectPath)) {
                 this.errors.push(`Directory "${this.config.projectName}" already exists`);
                 return this.getResult(false);
             }
 
-            // Create project directory
+
             await withSpinner(
                 'Creating project directory',
                 async () => {
@@ -54,7 +54,7 @@ export class ProjectGenerator {
                 }
             );
 
-            // Generate based on mode
+
             switch (this.config.mode) {
                 case 'full':
                     await this.generateFullStack();
@@ -67,10 +67,10 @@ export class ProjectGenerator {
                     break;
             }
 
-            // Generate root-level files
+
             await this.generateRootFiles();
 
-            // Generate CI/CD files
+
             await this.generateCicdFiles();
 
             return this.getResult(true);
@@ -86,19 +86,19 @@ export class ProjectGenerator {
      * Generate full stack project (client + server)
      */
     private async generateFullStack(): Promise<void> {
-        // Generate client
+
         const clientGenerator = new ClientGenerator(this.config, this.context, this.projectPath);
         const clientResult = await clientGenerator.generate();
         this.createdFiles.push(...clientResult.createdFiles.map((f) => `client/${f}`));
         this.createdDirectories.push('client');
 
-        // Generate server
+
         const serverGenerator = new ServerGenerator(this.config, this.context, this.projectPath);
         const serverResult = await serverGenerator.generate();
         this.createdFiles.push(...serverResult.createdFiles.map((f) => `server/${f}`));
         this.createdDirectories.push('server');
 
-        // Generate shared directory
+
         await this.generateSharedDirectory();
     }
 
@@ -132,7 +132,7 @@ export class ProjectGenerator {
                 await createDirectory(joinPath(sharedPath, 'types'));
                 await createDirectory(joinPath(sharedPath, 'utils'));
 
-                // Create a basic index file
+
                 const ext = this.context.scriptExt;
                 const indexContent = this.context.isES6
                     ? `// Shared types and utilities\nexport {};\n`
@@ -163,7 +163,7 @@ export class ProjectGenerator {
                 );
                 this.createdFiles.push(...files);
 
-                // Docker files
+
                 if (this.config.docker) {
                     const dockerTemplatePath = getDockerTemplatePath('root');
                     if (await directoryExists(dockerTemplatePath)) {
