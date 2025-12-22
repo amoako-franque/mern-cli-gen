@@ -1,55 +1,69 @@
 import { Link } from 'react-router-dom';
-import { useAuth } from '../context/AuthContext';
-import { LogOut, User, ShoppingCart } from 'lucide-react';
+<%_ if (state==='context' ) { _%>
+    import { useAuth } from '../context/AuthContext';
+    <%_ } else if (state==='redux' ) { _%>
+        import { useAppSelector, useAppDispatch } from '../store/hooks';
+        import { logout as logoutAction } from '../store/slices/authSlice';
+        <%_ } _%>
+            import { LogOut, User, ShoppingCart } from 'lucide-react';
 
-const Navbar = () => {
-const { user, logout } = useAuth();
+            const Navbar = () => {
+            <%_ if (state==='context' ) { _%>
+                const { user, logout } = useAuth();
+                <%_ } else if (state==='redux' ) { _%>
+                    const { user } = useAppSelector((state) => state.auth);
+                    const dispatch = useAppDispatch();
+                    const logout = () => dispatch(logoutAction());
+                    <%_ } else { _%>
+                        const user = null; const logout = () => {};
+                        <%_ } _%>
 
-return (
-<nav className="bg-white shadow-sm">
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between h-16">
-            <div className="flex">
-                <Link to="/" className="flex-shrink-0 flex items-center font-bold text-xl text-indigo-600">
-                <%= projectNameCapitalized %>
-                    </Link>
-            </div>
-            <div className="flex items-center space-x-4">
-                {user ? (
-                <>
-                    <Link to="/dashboard"
-                        className="text-gray-700 hover:text-indigo-600 px-3 py-2 rounded-md text-sm font-medium flex items-center">
-                    <User className="w-4 h-4 mr-1" />
-                    Dashboard
-                    </Link>
-                    <Link to="/checkout"
-                        className="text-gray-700 hover:text-indigo-600 px-3 py-2 rounded-md text-sm font-medium flex items-center">
-                    <ShoppingCart className="w-4 h-4 mr-1" />
-                    Pricing
-                    </Link>
-                    <button onClick={logout}
-                        className="bg-indigo-600 text-white px-4 py-2 rounded-md text-sm font-medium flex items-center hover:bg-indigo-700">
-                        <LogOut className="w-4 h-4 mr-1" />
-                        Logout
-                    </button>
-                </>
-                ) : (
-                <>
-                    <Link to="/login"
-                        className="text-gray-700 hover:text-indigo-600 px-3 py-2 rounded-md text-sm font-medium">
-                    Login
-                    </Link>
-                    <Link to="/register"
-                        className="bg-indigo-600 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-indigo-700">
-                    Sign Up
-                    </Link>
-                </>
-                )}
-            </div>
-        </div>
-    </div>
-</nav>
-);
-};
+                            return (
+                            <nav className="bg-white shadow-sm">
+                                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                                    <div className="flex justify-between h-16">
+                                        <div className="flex">
+                                            <Link to="/"
+                                                className="flex-shrink-0 flex items-center font-bold text-xl text-indigo-600">
+                                            <%= projectNameCapitalized %>
+                                                </Link>
+                                        </div>
+                                        <div className="flex items-center space-x-4">
+                                            {user ? (
+                                            <>
+                                                <Link to="/dashboard"
+                                                    className="text-gray-700 hover:text-indigo-600 px-3 py-2 rounded-md text-sm font-medium flex items-center">
+                                                <User className="w-4 h-4 mr-1" />
+                                                Dashboard
+                                                </Link>
+                                                <Link to="/checkout"
+                                                    className="text-gray-700 hover:text-indigo-600 px-3 py-2 rounded-md text-sm font-medium flex items-center">
+                                                <ShoppingCart className="w-4 h-4 mr-1" />
+                                                Pricing
+                                                </Link>
+                                                <button onClick={logout}
+                                                    className="bg-indigo-600 text-white px-4 py-2 rounded-md text-sm font-medium flex items-center hover:bg-indigo-700">
+                                                    <LogOut className="w-4 h-4 mr-1" />
+                                                    Logout
+                                                </button>
+                                            </>
+                                            ) : (
+                                            <>
+                                                <Link to="/login"
+                                                    className="text-gray-700 hover:text-indigo-600 px-3 py-2 rounded-md text-sm font-medium">
+                                                Login
+                                                </Link>
+                                                <Link to="/register"
+                                                    className="bg-indigo-600 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-indigo-700">
+                                                Sign Up
+                                                </Link>
+                                            </>
+                                            )}
+                                        </div>
+                                    </div>
+                                </div>
+                            </nav>
+                            );
+                            };
 
-export default Navbar;
+                            export default Navbar;

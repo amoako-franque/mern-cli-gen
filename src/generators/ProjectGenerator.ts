@@ -9,8 +9,10 @@ import {
 import { logger, withSpinner } from '../utils/logger.js';
 import {
     createTemplateContext,
+    getBackendTemplatePath,
     getCicdTemplatePath,
     getDockerTemplatePath,
+    getFrontendTemplatePath,
     getRootTemplatePath,
     processTemplateDirectory,
 } from '../utils/templateUtils.js';
@@ -35,6 +37,40 @@ export class ProjectGenerator {
     }
 
     /**
+     * Validate that required templates exist
+     */
+    private async validateTemplates(): Promise<void> {
+        const missingTemplates: string[] = [];
+
+        // Validate frontend templates if needed
+        if (this.config.mode === 'full' || this.config.mode === 'frontend') {
+            const frontendPath = getFrontendTemplatePath(this.config);
+            if (!(await directoryExists(frontendPath))) {
+                missingTemplates.push(`Frontend: ${frontendPath}`);
+            }
+        }
+
+        // Validate backend templates if needed
+        if (this.config.mode === 'full' || this.config.mode === 'backend') {
+            const backendPath = getBackendTemplatePath(this.config);
+            if (!(await directoryExists(backendPath))) {
+                missingTemplates.push(`Backend: ${backendPath}`);
+            }
+        }
+
+        // Validate root templates
+        const rootPath = getRootTemplatePath();
+        if (!(await directoryExists(rootPath))) {
+            missingTemplates.push(`Root: ${rootPath}`);
+        }
+
+        if (missingTemplates.length > 0) {
+            const errorMessage = `Required templates not found:\n${missingTemplates.map(t => `  - ${t}`).join('\n')}`;
+            throw new Error(errorMessage);
+        }
+    }
+
+    /**
      * Run the full generation process
      */
     async generate(): Promise<GeneratorResult> {
@@ -45,6 +81,10 @@ export class ProjectGenerator {
                 return this.getResult(false);
             }
 
+            // Validate templates before starting
+            await withSpinner('Validating templates', async () => {
+                await this.validateTemplates();
+            });
 
             await withSpinner(
                 'Creating project directory',
@@ -76,8 +116,20 @@ export class ProjectGenerator {
             return this.getResult(true);
         } catch (error) {
             const message = error instanceof Error ? error.message : 'Unknown error';
+            const stack = error instanceof Error ? error.stack : undefined;
+
             this.errors.push(message);
             logger.error(`Generation failed: ${message}`);
+
+            // Log additional context for debugging
+            if (stack && process.env.NODE_ENV === 'development') {
+                logger.error(`Stack trace: ${stack}`);
+            }
+
+            logger.error(`Project path: ${this.projectPath}`);
+            logger.error(`Created ${this.createdFiles.length} files before failure`);
+            logger.error(`Created ${this.createdDirectories.length} directories before failure`);
+
             return this.getResult(false);
         }
     }
@@ -156,10 +208,19 @@ export class ProjectGenerator {
             'Generating root files',
             async () => {
                 const rootTemplatePath = getRootTemplatePath();
+                const rootFilter = (relativePath: string): boolean => {
+                    // Exclude .env.example in full or backend modes as it's already in server/ or handled by server generator
+                    if (relativePath.includes('.env.example') && (this.config.mode === 'full' || this.config.mode === 'backend')) {
+                        return false;
+                    }
+                    return true;
+                };
+
                 const files = await processTemplateDirectory(
                     rootTemplatePath,
                     this.projectPath,
-                    this.context
+                    this.context,
+                    rootFilter
                 );
                 this.createdFiles.push(...files);
 

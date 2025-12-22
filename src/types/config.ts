@@ -83,6 +83,7 @@ export interface CLIOptions {
     cicd?: CicdProvider;
     install?: boolean;
     dryRun?: boolean;
+    yes?: boolean;
 }
 
 /**
@@ -96,7 +97,7 @@ export const DEFAULT_CONFIG: Omit<ProjectConfig, 'projectName'> = {
     database: 'mongodb',
     orm: 'mongoose',
     auth: 'jwt',
-    state: 'redux',
+    state: 'zustand',
     tailwind: true,
     docker: true,
     payment: 'none',

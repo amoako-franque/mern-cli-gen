@@ -1,204 +1,146 @@
-import { Request, Response, NextFunction } from 'express';
-import { z } from 'zod';
-<% if (auth==='jwt' ) { %>
-    import jwt from 'jsonwebtoken';
-    <% } %>
-        <% if (database==='mongodb' ) { %>
-            import User from '../models/User';
-            <% } else { %>
-                import { UserModel as User } from '../models/User';
-                <% } %>
+import { Request, Response, NextFunction } from "express";
+import { z } from "zod";
+<%_ if (auth==="jwt" ) { _%>
+  import { signToken } from "../utils/authUtils.js";
+  <%_ } _%>
+    <%_ if (database==="mongodb" ) { _%>
+      import User from "../models/User.js";
+      <%_ } else { _%>
+        import { UserModel as User } from "../models/User.js";
+        <%_ } _%>
 
-                    const registerSchema = z.object({
-                    email: z.string().email('Invalid email address'),
-                    password: z.string().min(6, 'Password must be at least 6 characters'),
-                    name: z.string().optional(),
-                    });
+          const registerSchema = z.object({
+          email: z.string().email("Invalid email address"),
+          password: z.string().min(6, "Password must be at least 6 characters"),
+          name: z.string().optional(),
+          });
 
-                    const loginSchema = z.object({
-                    email: z.string().email('Invalid email address'),
-                    password: z.string().min(1, 'Password is required'),
-                    });
+          const loginSchema = z.object({
+          email: z.string().email("Invalid email address"),
+          password: z.string().min(1, "Password is required"),
+          });
 
-                    <% if (auth==='jwt' ) { %>
-                        const signToken = (id: string) => {
-                        return jwt.sign({ id }, process.env.JWT_SECRET || 'secret', {
-                        expiresIn: '30d',
+
+
+          export const register = async (req: Request, res: Response, next: NextFunction) => {
+          try {
+          const validatedData = registerSchema.parse(req.body);
+          const { email, password, name } = validatedData;
+
+          // Check if user exists
+          <%_ if (database==="mongodb" ) { _%>
+            const existingUser = await User.findOne({ email });
+            <%_ } else { _%>
+              const existingUser = await User.findByEmail(email);
+              <%_ } _%>
+
+                if (existingUser) {
+                res.status(400).json({ message: "User already exists" });
+                return;
+                }
+
+                // Create user
+                <%_ if (database==="mongodb" ) { _%>
+                  const user = await User.create({ email, password, name });
+                  const userId = user._id.toString();
+                  <%_ } else { _%>
+                    const user = await User.create({ email, password, name });
+                    const userId = user.id!.toString();
+                    <%_ } _%>
+
+                      <%_ if (auth==="jwt" ) { _%>
+                        const token = signToken(userId);
+                        res.status(201).json({
+                        token,
+                        user: { id: userId, email: user.email, name: user.name }
                         });
-                        };
-                        <% } %>
+                        <%_ } else { _%>
+                          (req as any).session.userId = userId;
+                          res.status(201).json({
+                          message: "Registered successfully",
+                          user: { id: userId, email: user.email, name: user.name }
+                          });
+                          <%_ } _%>
+                            } catch (error) {
+                            if (error instanceof z.ZodError) {
+                            res.status(400).json({ message: "Validation failed", errors: error.errors });
+                            return;
+                            }
+                            next(error);
+                            }
+                            };
 
-                            export const register = async (req: Request, res: Response, next: NextFunction) => {
+                            export const login = async (req: Request, res: Response, next: NextFunction) => {
                             try {
-                            const validatedData = registerSchema.parse(req.body);
-                            const { email, password, name } = validatedData;
+                            const validatedData = loginSchema.parse(req.body);
+                            const { email, password } = validatedData;
 
-                            // Check if user exists
-                            <% if (database==='mongodb' ) { %>
-                                const existingUser = await User.findOne({ email });
-                                <% } else { %>
-                                    const existingUser = await User.findByEmail(email);
-                                    <% } %>
+                            <%_ if (database==="mongodb" ) { _%>
+                              const user = await User.findOne({ email }).select("+password");
+                              <%_ } else { _%>
+                                const user = await User.findByEmail(email);
+                                <%_ } _%>
 
-                                        if (existingUser) {
-                                        res.status(400).json({ message: 'User already exists' });
+                                  if (!user) {
+                                  res.status(401).json({ message: "Invalid credentials" });
+                                  return;
+                                  }
+
+                                  <%_ if (database==="mongodb" ) { _%>
+                                    const isMatch = await user.comparePassword(password);
+                                    const userId = user._id.toString();
+                                    <%_ } else { _%>
+                                      const isMatch = await User.comparePassword(password, user.password!);
+                                      const userId = user.id!.toString();
+                                      <%_ } _%>
+
+                                        if (!isMatch) {
+                                        res.status(401).json({ message: "Invalid credentials" });
                                         return;
                                         }
 
-                                        // Create user
-                                        <% if (database==='mongodb' ) { %>
-                                            const user = await User.create({ email, password, name });
-                                            const userId = user._id.toString();
-                                            <% } else { %>
-                                                const user = await User.create({ email, password, name });
-                                                const userId = user.id!.toString();
-                                                <% } %>
+                                        <%_ if (auth==="jwt" ) { _%>
+                                          const token = signToken(userId);
+                                          res.json({
+                                          token,
+                                          user: { id: userId, email: user.email, name: user.name }
+                                          });
+                                          <%_ } else { _%>
+                                            (req as any).session.userId = userId;
+                                            res.json({
+                                            message: "Logged in successfully",
+                                            user: { id: userId, email: user.email, name: user.name }
+                                            });
+                                            <%_ } _%>
+                                              } catch (error) {
+                                              if (error instanceof z.ZodError) {
+                                              res.status(400).json({ message: "Validation failed", errors: error.errors
+                                              });
+                                              return;
+                                              }
+                                              next(error);
+                                              }
+                                              };
 
-                                                    <% if (auth==='jwt' ) { %>
-                                                        const token = signToken(userId);
-                                                        res.status(201).json({ token, user: { id: userId, email:
-                                                        user.email, name: user.name } });
-                                                        <% } else { %>
-                                                            // Session auth
-                                                            (req as any).session.userId = userId;
-                                                            res.status(201).json({ message: 'Registered successfully',
-                                                            user: { id: userId, email: user.email, name: user.name } });
-                                                            <% } %>
+                                              export const logout = (req: Request, res: Response) => {
+                                              <%_ if (auth==="jwt" ) { _%>
+                                                res.json({ message: "Logged out successfully" });
+                                                <%_ } else { _%>
+                                                  (req as any).session.destroy((err: any) => {
+                                                  if (err) return res.status(500).json({ message: "Could not log out"
+                                                  });
+                                                  res.json({ message: "Logged out successfully" });
+                                                  });
+                                                  <%_ } _%>
+                                                    };
 
-                                                                } catch (error) {
-                                                                if (error instanceof z.ZodError) {
-                                                                res.status(400).json({ message: 'Validation failed',
-                                                                errors: error.errors });
-                                                                return;
-                                                                }
-                                                                next(error);
-                                                                }
-                                                                };
-
-                                                                export const login = async (req: Request, res: Response,
-                                                                next: NextFunction) => {
-                                                                try {
-                                                                const validatedData = loginSchema.parse(req.body);
-                                                                const { email, password } = validatedData;
-
-                                                                <% if (database==='mongodb' ) { %>
-                                                                    const user = await User.findOne({ email
-                                                                    }).select('+password');
-                                                                    <% } else { %>
-                                                                        const user = await User.findByEmail(email);
-                                                                        <% } %>
-
-                                                                            if (!user) {
-                                                                            res.status(401).json({ message: 'Invalid
-                                                                            credentials' });
-                                                                            return;
-                                                                            }
-
-                                                                            <% if (database==='mongodb' ) { %>
-                                                                                const isMatch = await
-                                                                                user.comparePassword(password);
-                                                                                const userId = user._id.toString();
-                                                                                <% } else { %>
-                                                                                    const isMatch = await
-                                                                                    User.comparePassword(password,
-                                                                                    user.password!);
-                                                                                    const userId = user.id!.toString();
-                                                                                    <% } %>
-
-                                                                                        if (!isMatch) {
-                                                                                        res.status(401).json({ message:
-                                                                                        'Invalid credentials' });
-                                                                                        return;
-                                                                                        }
-
-                                                                                        <% if (auth==='jwt' ) { %>
-                                                                                            const token =
-                                                                                            signToken(userId);
-                                                                                            res.json({ token, user: {
-                                                                                            id: userId, email:
-                                                                                            user.email, name: user.name
-                                                                                            } });
-                                                                                            <% } else { %>
-                                                                                                (req as
-                                                                                                any).session.userId =
-                                                                                                userId;
-                                                                                                res.json({ message:
-                                                                                                'Logged in
-                                                                                                successfully', user: {
-                                                                                                id: userId, email:
-                                                                                                user.email, name:
-                                                                                                user.name } });
-                                                                                                <% } %>
-
-                                                                                                    } catch (error) {
-                                                                                                    if (error instanceof
-                                                                                                    z.ZodError) {
-                                                                                                    res.status(400).json({
-                                                                                                    message: 'Validation
-                                                                                                    failed', errors:
-                                                                                                    error.errors });
-                                                                                                    return;
-                                                                                                    }
-                                                                                                    next(error);
-                                                                                                    }
-                                                                                                    };
-
-                                                                                                    export const logout
-                                                                                                    = (req: Request,
-                                                                                                    res: Response) => {
-                                                                                                    <% if (auth==='jwt'
-                                                                                                        ) { %>
-                                                                                                        res.json({
-                                                                                                        message: 'Logged
-                                                                                                        out
-                                                                                                        successfully'
-                                                                                                        });
-                                                                                                        <% } else { %>
-                                                                                                            (req as
-                                                                                                            any).session.destroy((err:
-                                                                                                            any) => {
-                                                                                                            if (err)
-                                                                                                            return
-                                                                                                            res.status(500).json({
-                                                                                                            message:
-                                                                                                            'Could not
-                                                                                                            log out' });
-                                                                                                            res.json({
-                                                                                                            message:
-                                                                                                            'Logged out
-                                                                                                            successfully'
-                                                                                                            });
-                                                                                                            });
-                                                                                                            <% } %>
-                                                                                                                };
-
-                                                                                                                export
-                                                                                                                const
-                                                                                                                getMe =
-                                                                                                                async
-                                                                                                                (req:
-                                                                                                                Request,
-                                                                                                                res:
-                                                                                                                Response,
-                                                                                                                next:
-                                                                                                                NextFunction)
-                                                                                                                => {
-                                                                                                                try {
-                                                                                                                // User
-                                                                                                                is
-                                                                                                                already
-                                                                                                                attached
-                                                                                                                by
-                                                                                                                middleware
-                                                                                                                const
-                                                                                                                user =
-                                                                                                                (req as
-                                                                                                                any).user;
-                                                                                                                res.json({
-                                                                                                                user });
-                                                                                                                } catch
-                                                                                                                (error)
-                                                                                                                {
-                                                                                                                next(error);
-                                                                                                                }
-                                                                                                                };
+                                                    export const getMe = async (req: Request, res: Response, next:
+                                                    NextFunction) => {
+                                                    try {
+                                                    // User is already attached by middleware
+                                                    const user = (req as any).user;
+                                                    res.json({ user });
+                                                    } catch (error) {
+                                                    next(error);
+                                                    }
+                                                    };

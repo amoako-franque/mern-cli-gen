@@ -1,41 +1,41 @@
 generator client {
-provider = "prisma-client-js"
+  provider = "prisma-client-js"
 }
 
 datasource db {
-<% if (database==='mongodb' ) { %>
-    provider = "mongodb"
-    url = env("DATABASE_URL")
-    <% } else { %>
-        provider = "postgresql"
-        url = env("DATABASE_URL")
-        <% } %>
-            }
+<%_ if (database === "mongodb") { _%>
+  provider = "mongodb"
+  url = env("DATABASE_URL")
+<%_ } else { _%>
+  provider = "postgresql"
+  url = env("DATABASE_URL")
+<%_ } _%>
+}
 
-            model User {
-            <% if (database==='mongodb' ) { %>
-                id String @id @default(auto()) @map("_id") @db.ObjectId
-                email String @unique
-                password String?
-                name String?
-                <% if (auth==='passport' ) { %>
-                    googleId String? @unique
-                    githubId String? @unique
-                    <% } %>
-                        createdAt DateTime @default(now())
-                        updatedAt DateTime @updatedAt
-                        <% } else { %>
-                            id Int @id @default(autoincrement())
-                            email String @unique
-                            password String?
-                            name String?
-                            <% if (auth==='passport' ) { %>
-                                googleId String? @unique @map("google_id")
-                                githubId String? @unique @map("github_id")
-                                <% } %>
-                                    createdAt DateTime @default(now()) @map("created_at")
-                                    updatedAt DateTime @updatedAt @map("updated_at")
+model User {
+<%_ if (database === "mongodb") { _%>
+  id String @id @default(auto()) @map("_id") @db.ObjectId
+  email String @unique
+  password String?
+  name String?
+<%_ if (auth === "passport") { _%>
+  googleId String? @unique
+  githubId String? @unique
+<%_ } _%>
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+<%_ } else { _%>
+  id Int @id @default(autoincrement())
+  email String @unique
+  password String?
+  name String?
+<%_ if (auth === "passport") { _%>
+  googleId String? @unique @map("google_id")
+  githubId String? @unique @map("github_id")
+<%_ } _%>
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
 
-                                    @@map("users")
-                                    <% } %>
-                                        }
+  @@map("users")
+<%_ } _%>
+}

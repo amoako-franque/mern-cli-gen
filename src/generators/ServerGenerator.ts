@@ -1,12 +1,12 @@
 import type { ProjectConfig, TemplateContext } from '../types/index.js';
-import { joinPath, directoryExists, createDirectory } from '../utils/fileUtils.js';
+import { createDirectory, directoryExists, joinPath } from '../utils/fileUtils.js';
+import { withSpinner } from '../utils/logger.js';
 import {
     getBackendTemplatePath,
     getCommonBackendTemplatePath,
     getDockerTemplatePath,
     processTemplateDirectory,
 } from '../utils/templateUtils.js';
-import { withSpinner } from '../utils/logger.js';
 
 interface GenerateResult {
     createdFiles: string[];
@@ -42,28 +42,71 @@ export class ServerGenerator {
                 // Create output directory
                 await createDirectory(this.outputPath);
 
+                // Define filter for files
+                const serverFilter = (relativePath: string): boolean => {
+                    // Payment files
+                    if (this.config.payment === 'none') {
+                        if (relativePath.includes('controllers/paymentController')) return false;
+                        if (relativePath.includes('routes/payment')) return false;
+                        if (relativePath.includes('services/payment')) return false;
+                    }
+
+                    // Auth files
+                    if (this.config.auth === 'none') {
+                        if (relativePath.includes('controllers/authController')) return false;
+                        if (relativePath.includes('routes/auth')) return false;
+                        if (relativePath.includes('middleware/auth')) return false;
+                        if (relativePath.includes('config/passport')) return false;
+                        if (relativePath.includes('models/User')) return false;
+                        if (relativePath.includes('utils/authUtils')) return false;
+                    }
+
+                    return true;
+                };
+
                 // Check if variant-specific templates exist
                 const variantPath = getBackendTemplatePath(this.config);
                 if (await directoryExists(variantPath)) {
                     const files = await processTemplateDirectory(
                         variantPath,
                         this.outputPath,
-                        this.context
+                        this.context,
+                        serverFilter
                     );
                     createdFiles.push(...files);
                 } else {
-                    // Fallback or Error
-                    // Since we've only implemented TS-ES6 templates in this refactor, fail for others if not found.
-                    throw new Error(`Template not found for backend/${this.config.language}-${this.config.moduleSystem}`);
+                    const availableTemplates = [
+                        'express/ts-es6',
+                        'express/js-es6',
+                        'express/js-vanilla',
+                    ].join(', ');
+
+                    throw new Error(
+                        `Template not found for backend configuration:\n` +
+                        `  Language: ${this.config.language}\n` +
+                        `  Module System: ${this.config.moduleSystem}\n` +
+                        `  Expected path: ${variantPath}\n\n` +
+                        `Available template combinations: ${availableTemplates}\n` +
+                        `Please check your configuration or ensure the template exists.`
+                    );
                 }
 
-                // Process common templates
+                // Process common templates with specific sub-logic
                 const commonPath = getCommonBackendTemplatePath();
                 if (await directoryExists(commonPath)) {
+                    const commonFilter = (relativePath: string): boolean => {
+                        // Only include prisma if database is postgresql
+                        if (relativePath.startsWith('prisma') && this.config.database !== 'postgresql') {
+                            return false;
+                        }
+                        return true;
+                    };
+
                     const files = await processTemplateDirectory(
                         commonPath,
                         this.outputPath,
-                        this.context
+                        this.context,
+                        commonFilter
                     );
                     createdFiles.push(...files);
                 }

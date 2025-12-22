@@ -1,7 +1,7 @@
 import ejs from 'ejs';
 import path from 'path';
-import { readFile, getTemplatesDir, getAllFiles, writeFile } from './fileUtils.js';
 import type { ProjectConfig, TemplateContext } from '../types/index.js';
+import { getAllFiles, getTemplatesDir, readFile, writeFile } from './fileUtils.js';
 
 /**
  * Create a template context from project config
@@ -113,7 +113,8 @@ export function getCicdTemplatePath(provider: string): string {
 export async function processTemplateDirectory(
     templateDir: string,
     outputDir: string,
-    context: TemplateContext
+    context: TemplateContext,
+    filter?: (relativePath: string) => boolean
 ): Promise<string[]> {
     const createdFiles: string[] = [];
     const templateFiles = await getAllFiles(templateDir);
@@ -121,6 +122,11 @@ export async function processTemplateDirectory(
     for (const templateFile of templateFiles) {
         // Get relative path from template dir
         const relativePath = path.relative(templateDir, templateFile);
+
+        // Check if we should process this file
+        if (filter && !filter(relativePath)) {
+            continue;
+        }
 
         // Remove .ejs extension from output filename
         const outputFileName = relativePath.replace(/\.ejs$/, '');

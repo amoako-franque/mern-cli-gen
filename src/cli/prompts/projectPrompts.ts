@@ -26,7 +26,7 @@ export async function runProjectPrompts(
     };
 
 
-    if (!options.mode) {
+    if (!options.yes && !options.mode) {
         const { mode } = await inquirer.prompt<{ mode: GenerationMode }>([
             {
                 type: 'list',
@@ -37,16 +37,16 @@ export async function runProjectPrompts(
                     { name: 'Frontend Only (React)', value: 'frontend' },
                     { name: 'Backend Only (Express API)', value: 'backend' },
                 ],
-                default: 'full',
+                default: options.mode || 'full',
             },
         ]);
         answers.mode = mode;
     } else {
-        answers.mode = options.mode;
+        answers.mode = options.mode || 'full';
     }
 
 
-    if (!options.typescript && !options.javascript) {
+    if (!options.yes && !options.typescript && !options.javascript) {
         const { language } = await inquirer.prompt<{ language: Language }>([
             {
                 type: 'list',
@@ -56,12 +56,12 @@ export async function runProjectPrompts(
                     { name: 'TypeScript (recommended)', value: 'typescript' },
                     { name: 'JavaScript', value: 'javascript' },
                 ],
-                default: 'typescript',
+                default: options.javascript ? 'javascript' : 'typescript',
             },
         ]);
         answers.language = language;
     } else {
-        answers.language = options.typescript ? 'typescript' : 'javascript';
+        answers.language = options.javascript ? 'javascript' : 'typescript';
     }
 
 
@@ -86,7 +86,7 @@ export async function runProjectPrompts(
     }
 
 
-    if ((answers.mode === 'full' || answers.mode === 'frontend') && !options.frontend) {
+    if (!options.yes && (answers.mode === 'full' || answers.mode === 'frontend')) {
         const { frontend } = await inquirer.prompt<{ frontend: Frontend }>([
             {
                 type: 'list',
@@ -96,7 +96,7 @@ export async function runProjectPrompts(
                     { name: 'Vite + React (recommended)', value: 'vite' },
                     { name: 'Next.js', value: 'nextjs' },
                 ],
-                default: 'vite',
+                default: options.frontend || 'vite',
             },
         ]);
         answers.frontend = frontend;
@@ -105,7 +105,7 @@ export async function runProjectPrompts(
     }
 
 
-    if ((answers.mode === 'full' || answers.mode === 'frontend') && !options.state) {
+    if (!options.yes && (answers.mode === 'full' || answers.mode === 'frontend')) {
         const { state } = await inquirer.prompt<{ state: StateManagement }>([
             {
                 type: 'list',
@@ -117,7 +117,7 @@ export async function runProjectPrompts(
                     { name: 'React Context', value: 'context' },
                     { name: 'None', value: 'none' },
                 ],
-                default: 'zustand',
+                default: options.state || 'zustand',
             },
         ]);
         answers.state = state;
@@ -126,7 +126,7 @@ export async function runProjectPrompts(
     }
 
 
-    if ((answers.mode === 'full' || answers.mode === 'backend') && !options.database) {
+    if (!options.yes && (answers.mode === 'full' || answers.mode === 'backend')) {
         const { database } = await inquirer.prompt<{ database: Database }>([
             {
                 type: 'list',
@@ -136,7 +136,7 @@ export async function runProjectPrompts(
                     { name: 'MongoDB (with Mongoose)', value: 'mongodb' },
                     { name: 'PostgreSQL (with Prisma/PG)', value: 'postgresql' },
                 ],
-                default: 'mongodb',
+                default: options.database || 'mongodb',
             },
         ]);
         answers.database = database;
@@ -148,7 +148,7 @@ export async function runProjectPrompts(
     if (answers.database === 'mongodb') {
         answers.orm = 'mongoose';
     } else if (answers.database === 'postgresql') {
-        if (!options.orm) {
+        if (!options.yes) {
             const { orm } = await inquirer.prompt<{ orm: 'prisma' | 'pg' }>([
                 {
                     type: 'list',
@@ -158,19 +158,19 @@ export async function runProjectPrompts(
                         { name: 'Prisma (ORM)', value: 'prisma' },
                         { name: 'node-postgres (pg)', value: 'pg' },
                     ],
-                    default: 'prisma',
+                    default: options.orm || 'prisma',
                 },
             ]);
             answers.orm = orm;
         } else {
-            answers.orm = options.orm as 'prisma' | 'pg';
+            answers.orm = options.orm as 'prisma' | 'pg' || 'prisma';
         }
     } else {
         answers.orm = 'none';
     }
 
 
-    if ((answers.mode === 'full' || answers.mode === 'backend') && !options.auth) {
+    if (!options.yes && (answers.mode === 'full' || answers.mode === 'backend')) {
         const { auth } = await inquirer.prompt<{ auth: AuthType }>([
             {
                 type: 'list',
@@ -182,7 +182,7 @@ export async function runProjectPrompts(
                     { name: 'Passport (Local + Google + GitHub)', value: 'passport' },
                     { name: 'None', value: 'none' },
                 ],
-                default: 'jwt',
+                default: options.auth || 'jwt',
             },
         ]);
         answers.auth = auth;
@@ -191,13 +191,13 @@ export async function runProjectPrompts(
     }
 
 
-    if (options.docker === undefined) {
+    if (!options.yes) {
         const { docker } = await inquirer.prompt<{ docker: boolean }>([
             {
                 type: 'confirm',
                 name: 'docker',
                 message: 'Include Docker configuration?',
-                default: true,
+                default: options.docker !== undefined ? options.docker : true,
             },
         ]);
         answers.docker = docker;
@@ -206,7 +206,7 @@ export async function runProjectPrompts(
     }
 
 
-    if ((answers.mode === 'full' || answers.mode === 'backend') && !options.payment) {
+    if (!options.yes && (answers.mode === 'full' || answers.mode === 'backend')) {
         const { payment } = await inquirer.prompt<{ payment: PaymentProvider }>([
             {
                 type: 'list',
@@ -218,7 +218,7 @@ export async function runProjectPrompts(
                     { name: 'Paystack', value: 'paystack' },
                     { name: 'Mock Adapter (for development)', value: 'mock' },
                 ],
-                default: 'none',
+                default: options.payment || 'none',
             },
         ]);
         answers.payment = payment;
@@ -227,13 +227,13 @@ export async function runProjectPrompts(
     }
 
 
-    if (options.tailwind === undefined && (answers.mode === 'full' || answers.mode === 'frontend')) {
+    if (!options.yes && (answers.mode === 'full' || answers.mode === 'frontend')) {
         const { tailwind } = await inquirer.prompt<{ tailwind: boolean }>([
             {
                 type: 'confirm',
                 name: 'tailwind',
                 message: 'Include Tailwind CSS v4?',
-                default: true,
+                default: options.tailwind !== undefined ? options.tailwind : true,
             },
         ]);
         answers.tailwind = tailwind;
@@ -242,13 +242,13 @@ export async function runProjectPrompts(
     }
 
 
-    if (options.git === undefined) {
+    if (!options.yes) {
         const { git } = await inquirer.prompt<{ git: boolean }>([
             {
                 type: 'confirm',
                 name: 'git',
                 message: 'Initialize a git repository?',
-                default: true,
+                default: options.git !== undefined ? options.git : true,
             },
         ]);
         answers.git = git;
@@ -257,7 +257,7 @@ export async function runProjectPrompts(
     }
 
 
-    if (options.cicd === undefined) {
+    if (!options.yes) {
         const { cicd } = await inquirer.prompt<{ cicd: CicdProvider }>([
             {
                 type: 'list',
@@ -267,7 +267,7 @@ export async function runProjectPrompts(
                     { name: 'None', value: 'none' },
                     { name: 'GitHub Actions', value: 'github' },
                 ],
-                default: 'none',
+                default: options.cicd || 'none',
             },
         ]);
         answers.cicd = cicd;
@@ -276,13 +276,13 @@ export async function runProjectPrompts(
     }
 
 
-    if (options.install === undefined) {
+    if (!options.yes) {
         const { install } = await inquirer.prompt<{ install: boolean }>([
             {
                 type: 'confirm',
                 name: 'install',
                 message: 'Install dependencies after generation?',
-                default: true,
+                default: options.install !== undefined ? options.install : true,
             },
         ]);
         answers.install = install;

@@ -1,0 +1,53 @@
+# Source files
+src/
+tests/
+*.test.ts
+*.test.js
+
+# Configuration files
+tsconfig*.json
+jest.config.js
+jest.integration.config.js
+jest.setup.js
+eslint.config.js
+commitlint.config.js
+.prettierrc*
+.editorconfig
+
+# Development files
+.git/
+.github/
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Documentation (keep readme.md)
+task.md
+development_plan.md
+REVIEW.md
+CHANGELOG.md
+
+# Build artifacts (keep dist/)
+*.map
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# Logs
+*.log
+npm-debug.log*
+
+# Test coverage
+coverage/
+
+# Generated test projects
+test-*
+temp-*
+
+# OS
+.DS_Store
+Thumbs.db
+

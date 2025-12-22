@@ -1,21 +1,21 @@
-import { Router } from 'express';
-import { healthRouter } from './health.js';
-<% if (auth !=='none' ) { %>
-    import authRouter from './auth.js';
-    <% } %>
-        <% if (payment !=='none' ) { %>
-            import paymentRouter from './payment.js';
-            <% } %>
+import { Router } from "express";
+import { healthRouter } from "./health.js";
+<%_ if (auth !== "none") { _%>
+import authRouter from "./auth.js";
+<%_ } _%>
+<%_ if (payment !== "none") { _%>
+import paymentRouter from "./payment.js";
+<%_ } _%>
 
-                export const router = Router();
+export const router = Router();
 
-                // Health check
-                router.use('/health', healthRouter);
+// Health check
+router.use("/health", healthRouter);
 
-                <% if (auth !=='none' ) { %>
-                    router.use('/auth', authRouter);
-                    <% } %>
+<%_ if (auth !== "none") { _%>
+router.use("/auth", authRouter);
+<%_ } _%>
 
-                        <% if (payment !=='none' ) { %>
-                            router.use('/payments', paymentRouter);
-                            <% } %>
+<%_ if (payment !== "none") { _%>
+router.use("/payments", paymentRouter);
+<%_ } _%>

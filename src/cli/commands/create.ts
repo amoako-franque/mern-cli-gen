@@ -7,6 +7,19 @@ import { validateOptions, validateProjectName } from '../../utils/validation.js'
 import { confirmGeneration, displayConfigSummary, runProjectPrompts } from '../prompts/index.js';
 
 /**
+ * Check Node.js version compatibility
+ */
+function checkNodeVersion(): void {
+    const nodeVersion = process.version;
+    const majorVersion = parseInt(nodeVersion.slice(1).split('.')[0], 10);
+    if (majorVersion < 18) {
+        logger.error(`Node.js 18.0.0 or higher is required. Current version: ${nodeVersion}`);
+        logger.error('Please upgrade Node.js: https://nodejs.org/');
+        process.exit(1);
+    }
+}
+
+/**
  * Execute the create command
  */
 export async function createCommand(
@@ -14,6 +27,9 @@ export async function createCommand(
     options: CLIOptions
 ): Promise<void> {
     logger.banner();
+
+    // Check Node.js version
+    checkNodeVersion();
 
 
     const nameValidation = validateProjectName(projectName);
@@ -105,7 +121,17 @@ export async function createCommand(
 
     if (!result.success) {
         logger.error('Failed to generate project');
+        logger.error(`Project: ${config.projectName}`);
+        logger.error(`Mode: ${config.mode}`);
+        logger.error(`Path: ${result.projectPath}`);
+        logger.newLine();
+        logger.error('Errors:');
         result.errors.forEach((err: string) => logger.error(`  - ${err}`));
+        logger.newLine();
+        logger.error(`Partially created ${result.createdFiles.length} files`);
+        logger.error(`Partially created ${result.createdDirectories.length} directories`);
+        logger.newLine();
+        logger.info('Tip: Check the error messages above and verify your configuration.');
         process.exit(1);
     }
 

@@ -1,16 +1,92 @@
 const app = require('./app');
 const { config } = require('./config/index');
 const { connectDB } = require('./config/db');
+<%_ if (database === "mongodb") { _%>
+const mongoose = require('mongoose');
+<%_ } else if (database === "postgresql") { _%>
+<%_ if (orm === "prisma") { _%>
+const { prisma } = require('./config/db');
+<%_ } else { _%>
+const { pool } = require('./config/db');
+<%_ } _%>
+<%_ } _%>
 
 const PORT = config.port;
+
+let server;
 
 const startServer = async () => {
 try {
 await connectDB();
-app.listen(PORT, () => {
+server = app.listen(PORT, () => {
 console.log(`🚀 Server running on http://localhost:${PORT}`);
 console.log(`📝 Environment: ${config.nodeEnv}`);
 });
+
+// Graceful shutdown handlers
+const gracefulShutdown = async (signal) => {
+console.log(`\n${signal} received. Shutting down gracefully...`);
+
+if (server) {
+server.close(() => {
+console.log('HTTP server closed.');
+<%_ if (database === "mongodb") { _%>
+mongoose.connection.close(false, () => {
+console.log('MongoDB connection closed.');
+process.exit(0);
+});
+<%_ } else if (database === "postgresql") { _%>
+<%_ if (orm === "prisma") { _%>
+prisma.$disconnect().then(() => {
+console.log('PostgreSQL connection closed.');
+process.exit(0);
+}).catch(() => {
+process.exit(0);
+});
+<%_ } else { _%>
+pool.end(() => {
+console.log('PostgreSQL connection pool closed.');
+process.exit(0);
+});
+<%_ } _%>
+<%_ } else { _%>
+process.exit(0);
+<%_ } _%>
+});
+} else {
+<%_ if (database === "mongodb") { _%>
+mongoose.connection.close(false, () => {
+console.log('MongoDB connection closed.');
+process.exit(0);
+});
+<%_ } else if (database === "postgresql") { _%>
+<%_ if (orm === "prisma") { _%>
+prisma.$disconnect().then(() => {
+console.log('PostgreSQL connection closed.');
+process.exit(0);
+}).catch(() => {
+process.exit(0);
+});
+<%_ } else { _%>
+pool.end(() => {
+console.log('PostgreSQL connection pool closed.');
+process.exit(0);
+});
+<%_ } _%>
+<%_ } else { _%>
+process.exit(0);
+<%_ } _%>
+}
+
+// Force close after 10 seconds
+setTimeout(() => {
+console.error('Forced shutdown after timeout');
+process.exit(1);
+}, 10000);
+};
+
+process.on('SIGTERM', () => gracefulShutdown('SIGTERM'));
+process.on('SIGINT', () => gracefulShutdown('SIGINT'));
 } catch (error) {
 console.error('Failed to start server:', error);
 process.exit(1);

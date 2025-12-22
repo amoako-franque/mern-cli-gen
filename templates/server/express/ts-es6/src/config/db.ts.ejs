@@ -1,48 +1,53 @@
-<% if (database==='mongodb' ) { %>import mongoose from 'mongoose';
-    import { config } from './index.js';
+<%_ if (database === "mongodb") { _%>
+import mongoose from "mongoose";
+import { config } from "./index.js";
 
-    export const connectDB = async (): Promise<void> => {
-        try {
-        await mongoose.connect(config.mongoUri);
-        console.log('📦 Connected to MongoDB (Mongoose)');
-        } catch (error) {
-        console.error('❌ MongoDB connection error:', error);
-        process.exit(1);
-        }
-        };
-        <% } else if (database==='postgresql' ) { %>
-            <% if (orm==='prisma' ) { %>import { PrismaClient } from '@prisma/client';
+export const connectDB = async (): Promise<void> => {
+  try {
+    await mongoose.connect(config.mongoUri);
+    console.log("📦 Connected to MongoDB (Mongoose)");
+  } catch (error) {
+    console.error("❌ MongoDB connection error:", error);
+    process.exit(1);
+  }
+};
+<%_ } else if (database === "postgresql") { _%>
+<%_ if (orm === "prisma") { _%>
+import { PrismaClient } from "@prisma/client";
 
-                export const prisma = new PrismaClient();
+export const prisma = new PrismaClient();
 
-                export const connectDB = async (): Promise<void> => {
-                    try {
-                    await prisma.$connect();
-                    console.log('📦 Connected to PostgreSQL (Prisma)');
-                    } catch (error) {
-                    console.error('❌ Prisma connection error:', error);
-                    process.exit(1);
-                    }
-                    };
-                    <% } else { %>import pg from 'pg';
-                        import { config } from './index.js';
+export const connectDB = async (): Promise<void> => {
+  try {
+    await prisma.$connect();
+    console.log("📦 Connected to PostgreSQL (Prisma)");
+  } catch (error) {
+    console.error("❌ Prisma connection error:", error);
+    process.exit(1);
+  }
+};
+<%_ } else { _%>
+import pg from "pg";
+import { config } from "./index.js";
 
-                        const { Pool } = pg;
+const { Pool } = pg;
 
-                        export const pool = new Pool({
-                        connectionString: config.databaseUrl,
-                        });
+export const pool = new Pool({
+  connectionString: config.databaseUrl,
+});
 
-                        export const connectDB = async (): Promise<void> => {
-                            try {
-                            await pool.connect();
-                            console.log('📦 Connected to PostgreSQL (pg)');
-                            } catch (error) {
-                            console.error('❌ PostgreSQL connection error:', error);
-                            process.exit(1);
-                            }
-                            };
-                            <% } %>
-                                <% } else { %>
-                                    export const connectDB = async () => { console.log('No database configured'); };
-                                    <% } %>
+export const connectDB = async (): Promise<void> => {
+  try {
+    await pool.connect();
+    console.log("📦 Connected to PostgreSQL (pg)");
+  } catch (error) {
+    console.error("❌ PostgreSQL connection error:", error);
+    process.exit(1);
+  }
+};
+<%_ } _%>
+<%_ } else { _%>
+export const connectDB = async () => {
+  console.log("No database configured");
+};
+<%_ } _%>

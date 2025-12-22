@@ -1,0 +1,23 @@
+# Redux Toolkit Guide
+
+This project uses Redux Toolkit (RTK) for state management. This guide provides best practices and steps to add new states.
+
+## Store Configuration
+
+The store is configured in `src/store/index.ts`. All reducers should be added to the `reducer` object there.
+
+## Best Practices
+
+1.  **Use Slices**: Put related logic (state, reducers, actions) into slices in `src/store/slices/`.
+2.  **Hooks**: Always use the typed hooks `useAppDispatch` and `useAppSelector` from `src/store/hooks.ts` instead of the standard ones from `react-redux`.
+3.  **Encapsulation**: Keep state logic in reducers; keep components focused on UI.
+4.  **Async Logic**: Use `createAsyncThunk` for API calls within slices.
+
+## How to add a new feature (e.g., Products)
+
+1.  Create `src/store/slices/productSlice.ts`.
+2.  Define your state interface and initial status.
+3.  Create the slice using `createSlice`.
+4.  Export the actions and the reducer.
+5.  Register the reducer in `src/store/index.ts`.
+6.  Use the state in your components using `useAppSelector(state => state.products)`.

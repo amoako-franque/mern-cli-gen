@@ -43,19 +43,7 @@ export class ClientGenerator {
         await createDirectory(this.outputPath);
 
         // Check if variant-specific templates exist
-        let variantPath = getFrontendTemplatePath(this.config);
-
-        // Fallback to ts-es6 if specific variant doesn't exist (since that's our default implementation now)
-        if (!(await directoryExists(variantPath))) {
-          // Construct path for defaults: templates/client/vite/ts-es6
-          // This assumes we are only implementing TS-ES6 for now as the 'master' template
-          // In a real scenario we might error out or log a warning, but for Phase 1 refactor this is safe
-          // as we just created exactly these templates.
-          // However, better logic is: if language is JS, usage might fail or need JS templates.
-          // For now, let's rely on the method finding the path, and if not found, we error or ensure templates exist.
-          // Given we only made ts-es6 templates, if user asks for JS, we should probably warn or fallback? 
-          // For now, let's assume valid paths or error. 
-        }
+        const variantPath = getFrontendTemplatePath(this.config);
 
         if (await directoryExists(variantPath)) {
           const files = await processTemplateDirectory(
@@ -65,12 +53,23 @@ export class ClientGenerator {
           );
           createdFiles.push(...files);
         } else {
-          // Start of Refactor: If specific template not found (e.g. js-vanilla), 
-          // we currently don't have a programmatic fallback anymore. 
-          // We should throw an error or handle it.
-          // For the purpose of this task (Architectural Improvement), we assume templates exist.
-          // If not, we can't generate.
-          throw new Error(`Template not found for ${this.config.frontend}/${this.config.language}-${this.config.moduleSystem}`);
+          // Provide helpful error message with available options
+          const availableTemplates = [
+            'vite/ts-es6',
+            'vite/js-es6',
+            'vite/js-vanilla',
+            'nextjs/ts-es6',
+          ].join(', ');
+
+          throw new Error(
+            `Template not found for frontend configuration:\n` +
+            `  Frontend: ${this.config.frontend}\n` +
+            `  Language: ${this.config.language}\n` +
+            `  Module System: ${this.config.moduleSystem}\n` +
+            `  Expected path: ${variantPath}\n\n` +
+            `Available template combinations: ${availableTemplates}\n` +
+            `Please check your configuration or ensure the template exists.`
+          );
         }
 
         // Process common templates
