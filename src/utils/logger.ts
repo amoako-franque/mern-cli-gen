@@ -1,5 +1,6 @@
 import chalk from 'chalk';
 import ora, { type Ora } from 'ora';
+import type { ProjectConfig } from '../types/index.js';
 
 /**
  * Logger utility for styled console output
@@ -91,15 +92,94 @@ export const logger = {
     /**
      * Print success message after project creation
      */
-    complete: (projectName: string, projectPath: string): void => {
+    complete: (config: ProjectConfig, projectPath: string, envCreated: boolean): void => {
         console.log();
         console.log(chalk.green.bold('  🎉 Project created successfully!'));
         console.log();
-        console.log(chalk.white('  Next steps to get started:'));
+
+        // Show project structure
+        console.log(chalk.white('  📁 Project Structure:'));
+        if (config.mode === 'full') {
+            console.log(chalk.dim('    - client/     # React frontend'));
+            console.log(chalk.dim('    - server/     # Express backend'));
+            console.log(chalk.dim('    - shared/      # Shared types/utils'));
+        } else if (config.mode === 'frontend') {
+            console.log(chalk.dim('    - src/         # React frontend source'));
+        } else {
+            console.log(chalk.dim('    - src/         # Express backend source'));
+        }
         console.log();
-        console.log(chalk.cyan(`    1. cd ${projectName}`));
-        console.log(chalk.cyan('    2. cp .env.example .env'));
-        console.log(chalk.cyan('    3. npm run dev'));
+
+        // Environment setup message
+        if (envCreated && (config.mode === 'full' || config.mode === 'backend')) {
+            console.log(chalk.green('  ✅ Environment file created at server/.env'));
+            console.log(chalk.yellow('  ⚠️  Please update server/.env with your configuration'));
+            console.log();
+        }
+
+        // Quick Start instructions
+        if (config.mode === 'full') {
+            console.log(chalk.white('  🚀 Quick Start (Full Stack):'));
+            console.log();
+            console.log(chalk.cyan(`    1. cd ${config.projectName}`));
+            if (!envCreated) {
+                console.log(chalk.cyan('    2. cd server && cp .env.example .env'));
+                console.log(chalk.cyan('    3. # Edit server/.env with your configuration'));
+                console.log(chalk.cyan('    4. cd .. && npm run dev'));
+            } else {
+                console.log(chalk.cyan('    2. # Edit server/.env with your configuration'));
+                console.log(chalk.cyan('    3. npm run dev'));
+            }
+            console.log();
+            console.log(chalk.white('  🔧 Individual Services:'));
+            console.log();
+            console.log(chalk.dim('  Frontend Only:'));
+            console.log(chalk.cyan('    cd client'));
+            console.log(chalk.cyan('    npm run dev              # Starts on http://localhost:5173'));
+            console.log();
+            console.log(chalk.dim('  Backend Only:'));
+            console.log(chalk.cyan('    cd server'));
+            if (!envCreated) {
+                console.log(chalk.cyan('    cp .env.example .env'));
+            }
+            console.log(chalk.cyan('    # Edit .env with your configuration'));
+            console.log(chalk.cyan('    npm run dev              # Starts on http://localhost:51210'));
+        } else if (config.mode === 'frontend') {
+            console.log(chalk.white('  🚀 Quick Start:'));
+            console.log();
+            console.log(chalk.cyan(`    1. cd ${config.projectName}`));
+            console.log(chalk.cyan('    2. npm run dev              # Starts on http://localhost:5173'));
+        } else {
+            console.log(chalk.white('  🚀 Quick Start:'));
+            console.log();
+            console.log(chalk.cyan(`    1. cd ${config.projectName}`));
+            if (!envCreated) {
+                console.log(chalk.cyan('    2. cp .env.example .env'));
+                console.log(chalk.cyan('    3. # Edit .env with your configuration'));
+                console.log(chalk.cyan('    4. npm run dev              # Starts on http://localhost:51210'));
+            } else {
+                console.log(chalk.cyan('    2. # Edit .env with your configuration'));
+                console.log(chalk.cyan('    3. npm run dev              # Starts on http://localhost:51210'));
+            }
+        }
+
+        console.log();
+        console.log(chalk.white('  📝 Environment Setup:'));
+        if (config.mode === 'full' || config.mode === 'backend') {
+            const envPath = config.mode === 'full' ? 'server/.env' : '.env';
+            console.log(chalk.dim(`    - Environment file: ${envPath}`));
+            if (config.database === 'mongodb') {
+                console.log(chalk.dim('    - Update MONGODB_URI with your connection string'));
+            } else if (config.database === 'postgresql') {
+                console.log(chalk.dim('    - Update DATABASE_URL with your connection string'));
+            }
+            if (config.auth !== 'none') {
+                console.log(chalk.dim('    - Add JWT_SECRET or SESSION_SECRET'));
+            }
+            if (config.payment !== 'none') {
+                console.log(chalk.dim(`    - Add ${config.payment.toUpperCase()}_SECRET_KEY`));
+            }
+        }
         console.log();
         console.log(chalk.white('  Happy coding! 🚀'));
         console.log();

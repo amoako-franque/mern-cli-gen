@@ -37,7 +37,7 @@ COPY --from=build /app/src ./src
 <% } %>
 
 # Expose port
-EXPOSE <%= typeof port !== 'undefined' ? port : 5000 %>
+EXPOSE <%= typeof port !== 'undefined' ? port : 51210 %>
 
 # Start application
 CMD ["npm", "start"]

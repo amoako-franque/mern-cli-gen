@@ -65,8 +65,8 @@ mern-cli-gen create my-app
 Your application will be live at:
 
 - **Frontend:** <http://localhost:5173>
-- **Backend:** <http://localhost:5000>
-- **API Documentation:** <http://localhost:5000/api-docs>
+- **Backend:** <http://localhost:51210>
+- **API Documentation:** <http://localhost:51210/api-docs>
 
 ---
 

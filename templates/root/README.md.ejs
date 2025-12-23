@@ -59,12 +59,12 @@
                                                                             Cloud
                                                                             Console](https://console.cloud.google.com/).
                                                                             Set redirect URI to
-                                                                            `http://localhost:5000/api/auth/google/callback`.
+                                                                            `http://localhost:51210/api/auth/google/callback`.
                                                                             2. **GitHub**: Create a new OAuth App in
                                                                             [GitHub Developer
                                                                             Settings](https://github.com/settings/developers).
                                                                             Set redirect URI to
-                                                                            `http://localhost:5000/api/auth/github/callback`.
+                                                                            `http://localhost:51210/api/auth/github/callback`.
                                                                             <% } %>
 
                                                                                 <% if (payment !=='none' ) { %>
@@ -81,7 +81,7 @@
                                                                                                 ? 'Stripe' : 'Paystack'
                                                                                                 %> CLI to forward
                                                                                                 webhooks to
-                                                                                                `http://localhost:5000/api/payment/webhook`.
+                                                                                                `http://localhost:51210/api/payment/webhook`.
                                                                                                 <% } %>
 
                                                                                                     <% if

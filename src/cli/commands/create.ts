@@ -1,7 +1,7 @@
 import { execa } from 'execa';
 import { ProjectGenerator } from '../../generators/index.js';
 import type { CLIOptions, ProjectConfig } from '../../types/index.js';
-import { directoryExists, getCwd, joinPath } from '../../utils/fileUtils.js';
+import { copyFile, directoryExists, fileExists, getCwd, joinPath } from '../../utils/fileUtils.js';
 import { logger, withSpinner } from '../../utils/logger.js';
 import { validateOptions, validateProjectName } from '../../utils/validation.js';
 import { confirmGeneration, displayConfigSummary, runProjectPrompts } from '../prompts/index.js';
@@ -151,8 +151,46 @@ export async function createCommand(
         await installDependencies(result.projectPath, config);
     }
 
+    // Auto-create .env file from .env.example
+    const envCreated = await createEnvFile(result.projectPath, config);
 
-    logger.complete(config.projectName, result.projectPath);
+    logger.complete(config, result.projectPath, envCreated);
+}
+
+/**
+ * Create .env file from .env.example if it doesn't exist
+ */
+async function createEnvFile(projectPath: string, config: ProjectConfig): Promise<boolean> {
+    // Only create .env for backend or full stack projects
+    if (config.mode === 'frontend') {
+        return false;
+    }
+
+    const serverPath = config.mode === 'full'
+        ? joinPath(projectPath, 'server')
+        : projectPath;
+
+    const envExamplePath = joinPath(serverPath, '.env.example');
+    const envPath = joinPath(serverPath, '.env');
+
+    // Check if .env.example exists
+    if (!(await fileExists(envExamplePath))) {
+        return false;
+    }
+
+    // Check if .env already exists
+    if (await fileExists(envPath)) {
+        return false;
+    }
+
+    // Copy .env.example to .env
+    try {
+        await copyFile(envExamplePath, envPath);
+        return true;
+    } catch (error) {
+        logger.warn('Failed to create .env file automatically');
+        return false;
+    }
 }
 
 /**
