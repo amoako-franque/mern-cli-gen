@@ -1,6 +1,11 @@
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
+<%_ if (state==='context' ) { _%>
 import { useAuth } from '../context/AuthContext';
+<%_ } else if (state==='redux' ) { _%>
+import { useAppDispatch } from '../store/hooks';
+import { loginSuccess } from '../store/slices/authSlice';
+<%_ } _%>
 import api from '../services/api';
 import { toast } from 'react-hot-toast';
 import { Github, Mail } from 'lucide-react';
@@ -8,7 +13,14 @@ import { Github, Mail } from 'lucide-react';
 const Login = () => {
 const [email, setEmail] = useState('');
 const [password, setPassword] = useState('');
+<%_ if (state==='context' ) { _%>
 const { login } = useAuth();
+<%_ } else if (state==='redux' ) { _%>
+const dispatch = useAppDispatch();
+const login = (token, user) => dispatch(loginSuccess({ token, user }));
+<%_ } else { _%>
+const login = (token, user) => {};
+<%_ } _%>
 const navigate = useNavigate();
 
 const handleSubmit = async (e) => {

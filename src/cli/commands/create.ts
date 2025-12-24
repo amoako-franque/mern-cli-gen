@@ -1,4 +1,5 @@
 import { execa } from 'execa';
+import inquirer from 'inquirer';
 import { ProjectGenerator } from '../../generators/index.js';
 import type { CLIOptions, ProjectConfig } from '../../types/index.js';
 import { copyFile, directoryExists, fileExists, getCwd, joinPath } from '../../utils/fileUtils.js';
@@ -20,10 +21,72 @@ function checkNodeVersion(): void {
 }
 
 /**
+ * Prompt for project name if not provided
+ */
+async function promptProjectName(): Promise<string> {
+    const { projectName } = await inquirer.prompt<{ projectName: string }>([
+        {
+            type: 'input',
+            name: 'projectName',
+            message: 'What is your project name?',
+            validate: (input: string) => {
+                const validation = validateProjectName(input);
+                if (!validation.valid) {
+                    return validation.errors.join('\n');
+                }
+                return true;
+            },
+        },
+    ]);
+    return projectName;
+}
+
+/**
+ * Get helpful error suggestions based on error message
+ */
+function getErrorSuggestions(errorMessage: string): string[] {
+    const suggestions: string[] = [];
+    const lowerError = errorMessage.toLowerCase();
+
+    if (lowerError.includes('template') || lowerError.includes('not found')) {
+        suggestions.push('Missing template files - check package installation');
+        suggestions.push('Try reinstalling: npm install -g mern-cli-gen@latest');
+    }
+
+    if (lowerError.includes('permission') || lowerError.includes('eacces') || lowerError.includes('eperm')) {
+        suggestions.push('Permission error - check directory permissions');
+        suggestions.push('Try running with appropriate permissions or choose a different location');
+    }
+
+    if (lowerError.includes('space') || lowerError.includes('enospc') || lowerError.includes('disk')) {
+        suggestions.push('Insufficient disk space');
+        suggestions.push('Free up disk space and try again');
+    }
+
+    if (lowerError.includes('exists') || lowerError.includes('already')) {
+        suggestions.push('Directory already exists');
+        suggestions.push('Choose a different project name or remove the existing directory');
+    }
+
+    if (lowerError.includes('npm') || lowerError.includes('install') || lowerError.includes('dependency')) {
+        suggestions.push('Dependency installation failed');
+        suggestions.push('Check your internet connection and npm configuration');
+        suggestions.push('You can skip auto-install with --no-install and install manually later');
+    }
+
+    if (suggestions.length === 0) {
+        suggestions.push('Check the error message above for details');
+        suggestions.push('Verify your configuration and try again');
+    }
+
+    return suggestions;
+}
+
+/**
  * Execute the create command
  */
 export async function createCommand(
-    projectName: string,
+    projectName: string | undefined,
     options: CLIOptions
 ): Promise<void> {
     logger.banner();
@@ -31,10 +94,22 @@ export async function createCommand(
     // Check Node.js version
     checkNodeVersion();
 
+    // Prompt for project name if not provided
+    let finalProjectName = projectName;
+    if (!finalProjectName) {
+        try {
+            finalProjectName = await promptProjectName();
+        } catch (error) {
+            // User cancelled (Ctrl+C)
+            logger.newLine();
+            logger.info('Operation cancelled');
+            process.exit(0);
+        }
+    }
 
-    const nameValidation = validateProjectName(projectName);
+    const nameValidation = validateProjectName(finalProjectName);
     if (!nameValidation.valid) {
-        logger.error(`Invalid project name: ${projectName}`);
+        logger.error(`Invalid project name: ${finalProjectName}`);
         nameValidation.errors.forEach((err) => logger.error(`  - ${err}`));
         process.exit(1);
     }
@@ -43,10 +118,9 @@ export async function createCommand(
         nameValidation.warnings.forEach((warn) => logger.warn(`  - ${warn}`));
     }
 
-
-    const projectPath = joinPath(getCwd(), projectName);
+    const projectPath = joinPath(getCwd(), finalProjectName);
     if (await directoryExists(projectPath)) {
-        logger.error(`Directory "${projectName}" already exists`);
+        logger.error(`Directory "${finalProjectName}" already exists`);
         process.exit(1);
     }
 
@@ -59,15 +133,15 @@ export async function createCommand(
 
     optionsValidation.warnings.forEach((warn) => logger.warn(warn));
 
-
     let config: ProjectConfig;
+    let generator: ProjectGenerator | null = null;
 
     if (options.dryRun) {
         logger.info('Dry run mode - no files will be created');
     }
 
     try {
-        config = await runProjectPrompts(projectName, options);
+        config = await runProjectPrompts(finalProjectName, options);
     } catch (error) {
         // User cancelled (Ctrl+C)
         logger.newLine();
@@ -116,11 +190,33 @@ export async function createCommand(
     logger.newLine();
     logger.title('Generating Project');
 
-    const generator = new ProjectGenerator(config);
-    const result = await generator.generate();
+    generator = new ProjectGenerator(config);
+    let result;
+
+    try {
+        result = await generator.generate();
+    } catch (error) {
+        // Handle unexpected errors during generation
+        const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+        logger.error('Unexpected error during generation');
+        logger.error(errorMessage);
+
+        // Attempt cleanup
+        if (generator) {
+            await generator.cleanup();
+        }
+
+        logger.newLine();
+        logger.warn('⚠️  Cleaning up partially created project...');
+        const suggestions = getErrorSuggestions(errorMessage);
+        logger.newLine();
+        logger.info('💡 Common issues:');
+        suggestions.forEach((suggestion) => logger.info(`   - ${suggestion}`));
+        process.exit(1);
+    }
 
     if (!result.success) {
-        logger.error('Failed to generate project');
+        logger.error('❌ Failed to generate project');
         logger.error(`Project: ${config.projectName}`);
         logger.error(`Mode: ${config.mode}`);
         logger.error(`Path: ${result.projectPath}`);
@@ -128,10 +224,24 @@ export async function createCommand(
         logger.error('Errors:');
         result.errors.forEach((err: string) => logger.error(`  - ${err}`));
         logger.newLine();
-        logger.error(`Partially created ${result.createdFiles.length} files`);
-        logger.error(`Partially created ${result.createdDirectories.length} directories`);
+
+        // Perform cleanup
+        logger.warn('⚠️  Cleaning up partially created project...');
+        try {
+            await generator.cleanup();
+            logger.success(`✓ Removed ${result.createdFiles.length} files`);
+            logger.success(`✓ Removed ${result.createdDirectories.length} directories`);
+        } catch (cleanupError) {
+            logger.error('Failed to clean up all files. Please manually remove:');
+            logger.error(`  ${result.projectPath}`);
+        }
+
         logger.newLine();
-        logger.info('Tip: Check the error messages above and verify your configuration.');
+        logger.info('💡 Tip: Check the error messages above and verify your configuration.');
+        const suggestions = getErrorSuggestions(result.errors.join(' '));
+        logger.newLine();
+        logger.info('Common issues:');
+        suggestions.forEach((suggestion) => logger.info(`   - ${suggestion}`));
         process.exit(1);
     }
 
@@ -148,7 +258,28 @@ export async function createCommand(
 
 
     if (config.install) {
-        await installDependencies(result.projectPath, config);
+        try {
+            await installDependencies(result.projectPath, config);
+        } catch (error) {
+            const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+            logger.error('Failed to install dependencies');
+            logger.error(errorMessage);
+            logger.newLine();
+            logger.warn('⚠️  Project structure was created successfully, but dependency installation failed.');
+            logger.info('You can install dependencies manually:');
+            if (config.mode === 'full') {
+                logger.info('  cd ' + config.projectName);
+                logger.info('  npm install');
+                logger.info('  cd client && npm install');
+                logger.info('  cd ../server && npm install');
+            } else {
+                logger.info('  cd ' + config.projectName);
+                logger.info('  npm install');
+            }
+            logger.newLine();
+            logger.info('Or skip auto-install next time with --no-install flag');
+            // Don't cleanup on install failure - project was created successfully
+        }
     }
 
     // Auto-create .env file from .env.example

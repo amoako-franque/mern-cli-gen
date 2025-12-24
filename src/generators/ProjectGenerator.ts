@@ -5,6 +5,7 @@ import {
     directoryExists,
     getCwd,
     joinPath,
+    removeDirectory,
 } from '../utils/fileUtils.js';
 import { logger, withSpinner } from '../utils/logger.js';
 import {
@@ -213,6 +214,10 @@ export class ProjectGenerator {
                     if (relativePath.includes('.env.example') && (this.config.mode === 'full' || this.config.mode === 'backend')) {
                         return false;
                     }
+                    // Exclude package.json for backend-only mode - backend generator already creates it at root
+                    if (relativePath === 'package.json' && this.config.mode === 'backend') {
+                        return false;
+                    }
                     return true;
                 };
 
@@ -273,5 +278,23 @@ export class ProjectGenerator {
             createdDirectories: this.createdDirectories,
             errors: this.errors,
         };
+    }
+
+    /**
+     * Clean up all created files and directories
+     * Called automatically when generation fails
+     */
+    async cleanup(): Promise<void> {
+        if (await directoryExists(this.projectPath)) {
+            try {
+                await removeDirectory(this.projectPath);
+                logger.success(`Cleaned up project directory: ${this.config.projectName}`);
+            } catch (error) {
+                const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+                logger.error(`Failed to remove project directory: ${errorMessage}`);
+                logger.error(`Please manually remove: ${this.projectPath}`);
+                throw error;
+            }
+        }
     }
 }

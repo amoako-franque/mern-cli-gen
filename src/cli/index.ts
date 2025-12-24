@@ -21,12 +21,12 @@ program
     .version(packageJson.version);
 
 program
-    .command('create <project-name>')
+    .command('create [project-name]')
     .description('Create a new MERN project')
-    .option('-m, --mode <mode>', 'Generation mode: full, frontend, backend', 'full')
-    .option('-t, --typescript', 'Use TypeScript (default)', true)
+    .option('-m, --mode <mode>', 'Generation mode: full, frontend, backend')
+    .option('-t, --typescript', 'Use TypeScript')
     .option('-j, --javascript', 'Use JavaScript')
-    .option('-e, --es6', 'Use ES6 modules (default)', true)
+    .option('-e, --es6', 'Use ES6 modules')
     .option('-v, --vanilla', 'Use CommonJS modules')
     .option('-f, --frontend <framework>', 'Frontend: vite, nextjs', 'vite')
     .option('-d, --database <db>', 'Database: mongodb, postgresql', 'mongodb')
@@ -43,7 +43,7 @@ program
     .option('--no-install', 'Skip dependency installation')
     .option('--dry-run', 'Preview without creating files')
     .option('-y, --yes', 'Skip all prompts and use defaults')
-    .action(async (projectName: string, options: CLIOptions) => {
+    .action(async (projectName: string | undefined, options: CLIOptions) => {
         try {
             await createCommand(projectName, options);
         } catch (error) {

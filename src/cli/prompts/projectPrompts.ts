@@ -26,7 +26,9 @@ export async function runProjectPrompts(
     };
 
 
-    if (!options.yes && !options.mode) {
+    // Mode selection prompt - should be first
+    if (!options.yes && options.mode === undefined) {
+        logger.newLine();
         const { mode } = await inquirer.prompt<{ mode: GenerationMode }>([
             {
                 type: 'list',
@@ -37,7 +39,7 @@ export async function runProjectPrompts(
                     { name: 'Frontend Only (React)', value: 'frontend' },
                     { name: 'Backend Only (Express API)', value: 'backend' },
                 ],
-                default: options.mode || 'full',
+                default: 'full',
             },
         ]);
         answers.mode = mode;
@@ -46,17 +48,19 @@ export async function runProjectPrompts(
     }
 
 
-    if (!options.yes && !options.typescript && !options.javascript) {
+    // Language selection prompt
+    if (!options.yes && options.typescript === undefined && options.javascript === undefined) {
+        logger.newLine();
         const { language } = await inquirer.prompt<{ language: Language }>([
             {
                 type: 'list',
                 name: 'language',
-                message: 'Which language would you like to use?',
+                message: 'Which programming language would you like to use?',
                 choices: [
                     { name: 'TypeScript (recommended)', value: 'typescript' },
                     { name: 'JavaScript', value: 'javascript' },
                 ],
-                default: options.javascript ? 'javascript' : 'typescript',
+                default: 'typescript',
             },
         ]);
         answers.language = language;
@@ -64,15 +68,16 @@ export async function runProjectPrompts(
         answers.language = options.javascript ? 'javascript' : 'typescript';
     }
 
-
-    if (answers.language === 'javascript' && !options.es6 && !options.vanilla) {
+    // Module system selection (only for JavaScript)
+    if (answers.language === 'javascript' && options.es6 === undefined && options.vanilla === undefined) {
+        logger.newLine();
         const { moduleSystem } = await inquirer.prompt<{ moduleSystem: ModuleSystem }>([
             {
                 type: 'list',
                 name: 'moduleSystem',
-                message: 'Which module system would you like to use?',
+                message: 'Which JavaScript module system would you like to use?',
                 choices: [
-                    { name: 'ES6 Modules (import/export)', value: 'es6' },
+                    { name: 'ES6 Modules (import/export) - recommended', value: 'es6' },
                     { name: 'CommonJS (require/module.exports)', value: 'vanilla' },
                 ],
                 default: 'es6',

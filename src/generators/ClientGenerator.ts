@@ -46,10 +46,24 @@ export class ClientGenerator {
         const variantPath = getFrontendTemplatePath(this.config);
 
         if (await directoryExists(variantPath)) {
+          // Define filter for files based on state management
+          const clientFilter = (relativePath: string): boolean => {
+            // Exclude context directory if state management is not 'context'
+            if (this.config.state !== 'context' && relativePath.startsWith('context/')) {
+              return false;
+            }
+            // Exclude store directory if state management is 'context' or 'none'
+            if ((this.config.state === 'context' || this.config.state === 'none') && relativePath.startsWith('store/')) {
+              return false;
+            }
+            return true;
+          };
+
           const files = await processTemplateDirectory(
             variantPath,
             this.outputPath,
-            this.context
+            this.context,
+            clientFilter
           );
           createdFiles.push(...files);
         } else {

@@ -1,7 +1,17 @@
+<%_ if (state==='context' ) { _%>
 import { useAuth } from '../context/AuthContext';
+<%_ } else if (state==='redux' ) { _%>
+import { useAppSelector } from '../store/hooks';
+<%_ } _%>
 
 const Dashboard = () => {
+<%_ if (state==='context' ) { _%>
 const { user } = useAuth();
+<%_ } else if (state==='redux' ) { _%>
+const { user } = useAppSelector((state) => state.auth);
+<%_ } else { _%>
+const user = null;
+<%_ } _%>
 
 return (
 <div className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">

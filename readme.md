@@ -32,12 +32,20 @@ MERN-CLI-Gen takes the pain out of starting a new full-stack project. It generat
 
 ```bash
 # Using npx (recommended - run without installing)
-npx mern-cli-gen create my-app
+# With project name provided
+npx mern-cli-gen@latest create my-app
+
+# Without project name (will prompt for it)
+npx mern-cli-gen@latest create
 
 # Global installation
 npm install -g mern-cli-gen
 mern-cli-gen create my-app
+# or
+mern-cli-gen create  # will prompt for project name
 ```
+
+**Note:** The `@latest` tag is optional when using npx - it will use the latest version by default.
 
 ---
 
@@ -46,14 +54,21 @@ mern-cli-gen create my-app
 1. **Scaffold your project:**
 
    ```bash
-   npx mern-cli-gen create my-awesome-app
+   # With project name
+   npx mern-cli-gen@latest create my-awesome-app
+
+   # Or without project name (will prompt)
+   npx mern-cli-gen@latest create
    ```
+
+   Follow the interactive prompts to configure your project.
 
 2. **Setup Environment:**
 
    ```bash
    cd my-awesome-app
-   cp .env.example .env
+   # .env file is auto-created from .env.example
+   # Edit server/.env (or .env for backend-only) with your configuration
    ```
 
 3. **Launch Development Environment:**
@@ -64,7 +79,7 @@ mern-cli-gen create my-app
 
 Your application will be live at:
 
-- **Frontend:** <http://localhost:5173>
+- **Frontend:** <http://localhost:5173> (Vite) or <http://localhost:3000> (Next.js)
 - **Backend:** <http://localhost:51210>
 - **API Documentation:** <http://localhost:51210/api-docs>
 
@@ -73,8 +88,12 @@ Your application will be live at:
 ## CLI Reference
 
 ```bash
-mern-cli-gen create <project-name> [options]
+mern-cli-gen create [project-name] [options]
 ```
+
+**Project Name:**
+- If provided: The CLI will use it directly
+- If omitted: The CLI will prompt "What is your project name?" and validate the input
 
 ### Core Options
 
@@ -133,6 +152,47 @@ my-app/
 | `npm run test` | Executes Jest suites for both services |
 | `npm run lint` | Runs ESLint across the entire workspace |
 | `npm run docker:dev`| Starts the environment using Docker Compose |
+
+---
+
+## Error Recovery System ⚠️
+
+If project generation fails at any stage, the CLI automatically cleans up all created files and directories to prevent partial or corrupted projects.
+
+### Automatic Cleanup
+
+Cleanup is triggered when:
+- Project generation fails
+- Template rendering errors occur
+- File system errors (permissions, disk space, etc.)
+- User interruption (Ctrl+C)
+- Validation failures after generation starts
+- Dependency installation failures (if auto-install enabled)
+
+### What Gets Cleaned
+
+- Entire project directory
+- Partial files created before the error
+- Partial directories created before the error
+
+### User Feedback
+
+When cleanup occurs, you'll see:
+- Clear error messages explaining what went wrong
+- Detailed context about what was being created
+- Helpful suggestions for resolving common issues
+- Summary of what was cleaned (number of files/directories removed)
+
+**Note:** If dependency installation fails, the project structure is preserved (as it was created successfully), and you'll receive instructions for manual installation.
+
+---
+
+## Features
+
+- **Automatic Cleanup** — Failed generations are automatically cleaned up
+- **Optimized Dependencies** — Faster installation with only essential packages
+- **Interactive Prompts** — User-friendly configuration flow
+- **Error Recovery** — Comprehensive error handling with helpful suggestions
 
 ---
 

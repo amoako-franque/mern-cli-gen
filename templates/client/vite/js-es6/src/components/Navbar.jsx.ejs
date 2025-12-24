@@ -1,9 +1,22 @@
 import { Link } from 'react-router-dom';
+<%_ if (state==='context' ) { _%>
 import { useAuth } from '../context/AuthContext';
+<%_ } else if (state==='redux' ) { _%>
+import { useAppSelector, useAppDispatch } from '../store/hooks';
+import { logout as logoutAction } from '../store/slices/authSlice';
+<%_ } _%>
 import { LogOut, User, ShoppingCart } from 'lucide-react';
 
 const Navbar = () => {
+<%_ if (state==='context' ) { _%>
 const { user, logout } = useAuth();
+<%_ } else if (state==='redux' ) { _%>
+const { user } = useAppSelector((state) => state.auth);
+const dispatch = useAppDispatch();
+const logout = () => dispatch(logoutAction());
+<%_ } else { _%>
+const user = null; const logout = () => {};
+<%_ } _%>
 
 return (
 <nav className="bg-white shadow-sm">

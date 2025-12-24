@@ -1,7 +1,7 @@
 version: '3.8'
 
 services:
-<% if (mode==='full' || mode==='server' ) { %>
+<% if (mode==='full' || mode==='backend' ) { %>
     server:
     build: ./server
     ports:
@@ -64,7 +64,7 @@ services:
                                                                                                     volumes:
                                                                                                     <% if (mode==='full'
                                                                                                         ||
-                                                                                                        mode==='server'
+                                                                                                        mode==='backend'
                                                                                                         ) { %>
                                                                                                         <% if
                                                                                                             (database==='mongodb'
